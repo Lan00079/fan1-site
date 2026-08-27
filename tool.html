@@ -50,9 +50,11 @@
   pre#log { background:#0c1015; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; }
   a { color:var(--acc); text-decoration:none; }
   .hide { display:none !important; }
+  /* 2026-08-28 弹窗安全区: 两侧 160px 广告列之间 (窗口 1280 时中央可用 ~940px) */
+  :root { --modal-max: min(960px, calc(100vw - 380px)); }
   /* 对照表 modal */
   #trModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:10; }
-  #trBox { background:var(--card); border:1px solid var(--line); border-radius:12px; width:min(1000px,94vw); height:86vh; display:flex; flex-direction:column; padding:16px; }
+  #trBox { background:var(--card); border:1px solid var(--line); border-radius:12px; width:var(--modal-max); height:86vh; display:flex; flex-direction:column; padding:16px; }
   #trTable { flex:1; overflow:auto; margin-top:10px; border:1px solid var(--line); border-radius:8px; }
   #trTable table { width:100%; border-collapse:collapse; font-size:13px; }
   #trTable th { position:sticky; top:0; background:#141920; color:var(--dim); text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:600; }
@@ -124,7 +126,7 @@
 
   <!-- review queue modal -->
   <div id="rvModal" class="hide">
-    <div id="rvBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(1000px,94vw);height:86vh;display:flex;flex-direction:column;padding:16px">
+    <div id="rvBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:var(--modal-max);height:86vh;display:flex;flex-direction:column;padding:16px">
       <div class="row">
         <b>AI 校对队列</b>
         <span class="meta" id="rvInfo"></span>
@@ -396,17 +398,26 @@ async function openReview(id) {
   if (!items.length && !$("#rvInfo").innerHTML.includes("bar")) {
     $("#rvList").innerHTML = '<div style="padding:20px;color:var(--dim)">队列为空 — 点「重新校对」开始 AI 质检</div>';
   } else {
-    $("#rvList").innerHTML = items.map(x => `<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px">
-      <div class="meta">${issueTag(x.issue)} ${esc(x.note || "")}</div>
-      <table style="width:100%;font-size:13px;margin-top:6px"><tr>
-        <td style="width:33%;color:#aeb9c6;vertical-align:top">原文<br>${esc(x.jp)}</td>
-        <td style="width:33%;vertical-align:top">现译<br>${esc(x.cur)}</td>
-        <td style="width:34%;vertical-align:top;color:var(--warn)">AI直译<br>${esc(x.literal)}</td>
-      </tr></table>
-      <div class="row" style="margin-top:6px">
-        <button onclick="rvDecide('${esc(x.jp)}','keep')">保留现译</button>
+    $("#rvList").innerHTML = items.map(x => `<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:linear-gradient(180deg,#1c242f,#1a212b)">
+      <div class="row" style="margin-bottom:8px"><span class="tag part" style="margin-left:0">${issueTag(x.issue)}</span><span class="meta">${esc(x.note || "")}</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px">
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px">原文</div>
+          <div style="color:#aeb9c6;font-size:13px">${esc(x.jp)}</div>
+        </div>
+        <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px;border:1px solid rgba(62,207,142,.25)">
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--ok)">现译</div>
+          <div style="font-size:13px">${esc(x.cur)}</div>
+        </div>
+        <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px;border:1px solid rgba(255,180,84,.25)">
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--warn)">AI 直译</div>
+          <div style="font-size:13px;color:var(--warn)">${esc(x.literal)}</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button onclick="rvDecide('${esc(x.jp)}','keep')">✓ 保留现译</button>
         <button class="ghost" onclick="rvDecide('${esc(x.jp)}','literal')">采用直译</button>
-        <input type="text" class="grow rvCustom" data-jp="${esc(x.jp)}" placeholder="或在此输入自定义译文…">
+        <input type="text" class="grow rvCustom" data-jp="${esc(x.jp)}" placeholder="或输入自定义译文…">
         <button class="ghost" onclick="rvCustom(this)">自定义</button>
       </div>
     </div>`).join("");
