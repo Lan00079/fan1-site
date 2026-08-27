@@ -636,5 +636,33 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 </div>
 
 
+
+<!-- 更新提醒（2026-08-28）：网站发新版 Release 后弹横幅 -->
+<div id="updBar" class="hide" style="position:fixed;top:0;left:0;right:0;z-index:2147483647;background:linear-gradient(90deg,#2c5f8f,#4da3ff);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.35)">
+  <span style="flex:1;font-size:14px">🆕 <b id="updText">发现新版本</b></span>
+  <a id="updBtn" href="https://fan1.top/" target="_blank" style="background:#fff;color:#2c5f8f;border:none;border-radius:6px;padding:6px 16px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:700">下载新版</a>
+  <button id="updClose" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer">稍后</button>
+</div>
+<script>
+(function () {
+  var bar = document.getElementById("updBar");
+  if (!bar) return;
+  function check() {
+    fetch(API_BASE + "/api/version").then(function (r) { return r.json(); }).then(function (v) {
+      if (v && v.update && v.update.available && !sessionStorage.getItem("updDismissed")) {
+        document.getElementById("updText").textContent = "发现新版本 v" + String(v.update.version).replace(/^v/i, "") + (v.update.note ? " — " + v.update.note : "") + "（当前 v" + v.current + "）";
+        document.getElementById("updBtn").href = v.update.url || "https://fan1.top/";
+        bar.classList.remove("hide");
+      } else {
+        bar.classList.add("hide");
+      }
+    }).catch(function () {});
+  }
+  document.getElementById("updClose").onclick = function () { sessionStorage.setItem("updDismissed", "1"); bar.classList.add("hide"); };
+  setTimeout(check, 1500);
+  setInterval(check, 30 * 60 * 1000);
+})();
+</script>
+
 </body>
 </html>
