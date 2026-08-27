@@ -181,7 +181,7 @@
 <script>
 // 真站直连架构(2026-08-27): 本页部署在 fan1.top 真站上, 本地 API 通过 https://fan1.top:<port> 走
 // 工具的 ad-direct 代理回到本地服务(CORS 已放行本源)。port 由工具启动时以 ?port= 传入。
-const API_BASE = "https://fan1.top:" + (new URLSearchParams(location.search).get("port") || "443");
+const API_BASE = "https://fan1.top:" + (window.__FORCE_PORT__ || new URLSearchParams(location.search).get("port") || (location.port || "443"));
 </script>
 <script>
 let currentId = null, timer = null;
