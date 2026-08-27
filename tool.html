@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<script>(function(s){s.dataset.zone='11664343',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <title>freem 汉化</title>
 <meta name="robots" content="noindex">
 <style>
@@ -574,7 +573,16 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 })();
 </script>
 
-<!-- Monetag tag（zone 11664343）：行为型广告——无视觉容器, 脚本经隐藏 iframe 隔离加载, 弹窗按产品设计自行触发 -->
+
+
+<!-- 右侧广告列（2026-08-27 终版）：Adsterra 160x600 纵向 banner，整列贴右缘，内容靠左不遮挡 -->
+<div id="adCol" style="position:fixed;top:50%;right:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
+  <script>
+  atOptions = { 'key' : '0f7390460e9afa804c4928d4d3f676cf', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };
+</script>
+<script src="https://manyapostle.com/0f7390460e9afa804c4928d4d3f676cf/invoke.js"></script>
+</div>
+
 
 </body>
 </html>
