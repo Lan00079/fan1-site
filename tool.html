@@ -659,8 +659,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
     }).catch(function () {});
   }
   document.getElementById("updClose").onclick = function () { sessionStorage.setItem("updDismissed", "1"); bar.classList.add("hide"); };
-  setTimeout(check, 1500);
-  setInterval(check, 30 * 60 * 1000);
+  setTimeout(check, 1500); // 启动时检查一次(2026-08-28 定稿: 不做周期轮询)
 })();
 </script>
 
