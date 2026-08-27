@@ -8,7 +8,7 @@
   :root { --bg:#111418; --card:#1a1f26; --line:#2a323c; --txt:#dfe6ee; --dim:#8a97a6; --acc:#4da3ff; --ok:#3ecf8e; --err:#ff6b6b; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--txt); font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif; padding:24px; }
-  .wrap { max-width:860px; margin:0 0 0 24px; } /* 2026-08-27: 靠左布局——右侧留空给 Monetag 页内广告(右上角卡片), 不遮内容 */
+  .wrap { max-width:860px; margin:0 auto; } /* 2026-08-27 定稿: 居中——左右各留一列 160px 纵向 banner */
   h1 { font-size:20px; margin-bottom:4px; }
   .sub { color:var(--dim); font-size:12px; margin-bottom:18px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
@@ -575,8 +575,14 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 
 
 
-<!-- 右侧广告列（2026-08-27 终版）：Adsterra 160x600 纵向 banner，整列贴右缘，内容靠左不遮挡 -->
-<div id="adCol" style="position:fixed;top:50%;right:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
+<!-- 双侧广告列（2026-08-27 定稿）：Adsterra 160x600 纵向 banner ×2，内容居中，左右对称不遮挡 -->
+<div id="adColL" style="position:fixed;top:50%;left:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
+  <script>
+  atOptions = { 'key' : '0f7390460e9afa804c4928d4d3f676cf', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };
+</script>
+<script src="https://manyapostle.com/0f7390460e9afa804c4928d4d3f676cf/invoke.js"></script>
+</div>
+<div id="adColR" style="position:fixed;top:50%;right:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
   <script>
   atOptions = { 'key' : '0f7390460e9afa804c4928d4d3f676cf', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };
 </script>
