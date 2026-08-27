@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<script>(function(s){s.dataset.zone='11664343',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<title>freem 汉化</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#111418; --card:#1a1f26; --line:#2a323c; --txt:#dfe6ee; --dim:#8a97a6; --acc:#4da3ff; --ok:#3ecf8e; --err:#ff6b6b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--txt); font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif; padding:24px; }
+  .wrap { max-width:860px; margin:0 0 0 24px; } /* 2026-08-27: 靠左，右侧整列让给广告 */
+  h1 { font-size:20px; margin-bottom:4px; }
+  .sub { color:var(--dim); font-size:12px; margin-bottom:18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  input { background:#0d1014; border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:8px 10px; font-size:14px; outline:none; }
+  input:focus { border-color:var(--acc); }
+  button { background:var(--acc); border:none; color:#fff; border-radius:6px; padding:8px 16px; font-size:14px; cursor:pointer; }
+  button:hover { filter:brightness(1.12); }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
+  button.danger { background:var(--err); }
+  .grow { flex:1; }
+  .tag { font-size:11px; border-radius:4px; padding:1px 8px; margin-left:8px; }
+  .tag.cn { background:rgba(62,207,142,.15); color:var(--ok); }
+  .tag.part { background:rgba(255,180,84,.15); color:#ffb454; }
+  .tag.jp { background:rgba(138,151,166,.15); color:var(--dim); }
+  .game { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .game:last-child { border-bottom:none; }
+  .meta { color:var(--dim); font-size:12px; }
+    .game .bar { display:inline-block; width:120px; height:5px; background:#0d1014; border-radius:3px; overflow:hidden; vertical-align:1px; }
+    .game .bar > div { height:100%; background:var(--acc); transition:width .4s; }
+    .game .job-line { font-size:11px; color:var(--dim); margin-top:3px; }
+  pre#log { background:#0d1014; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; white-space:pre-wrap; color:#9fb0c3; }
+  a { color:var(--acc); text-decoration:none; }
+  .hide { display:none !important; }
+  /* 对照表 modal */
+  #trModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:10; }
+  #trBox { background:var(--card); border:1px solid var(--line); border-radius:12px; width:min(1000px,94vw); height:86vh; display:flex; flex-direction:column; padding:16px; }
+  #trTable { flex:1; overflow:auto; margin-top:10px; border:1px solid var(--line); border-radius:8px; }
+  #trTable table { width:100%; border-collapse:collapse; font-size:13px; }
+  #trTable th { position:sticky; top:0; background:#141920; color:var(--dim); text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:600; }
+  #trTable td { padding:6px 10px; border-bottom:1px solid #222a33; vertical-align:top; }
+  #trTable td.o { color:#aeb9c6; width:45%; }
+  #trTable input { width:100%; background:#0d1014; border:1px solid transparent; border-radius:4px; padding:5px 6px; color:var(--txt); font-size:13px; }
+  #trTable input:focus { border-color:var(--acc); outline:none; }
+  .saveBtn { background:transparent; border:1px solid var(--line); color:var(--dim); border-radius:4px; padding:2px 10px; font-size:12px; cursor:pointer; }
+  .saveBtn.dirty { color:var(--ok); border-color:var(--ok); }
+  .pageBtn { background:transparent; border:1px solid var(--line); color:var(--txt); border-radius:4px; padding:3px 12px; cursor:pointer; font-size:13px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+  <h1>freem 汉化 <button class="ghost" style="vertical-align:3px;font-size:12px;padding:2px 12px" onclick="shutdown()">⏻ 退出程序</button></h1>
+  <div class="sub"></div>
+
+  <div class="card">
+    <div class="row">
+      <input type="text" id="gameInput" class="grow" placeholder="游戏ID 或 网址（如 35127）">
+      <button onclick="startGame()">启动 / 添加游戏</button>
+    </div>
+    <div id="startHint" class="meta" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <b>翻译接口</b>
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="endpoint" class="grow" placeholder="API Endpoint（如 https://api.xx.com/v1）">
+      <input type="text" id="model" style="width:150px" placeholder="模型名">
+      <input type="password" id="apiKey" class="grow" placeholder="API Key">
+      <button class="ghost" onclick="saveCfg()">保存</button>
+      <button class="ghost" onclick="toggleNet(true)">网络与下载 ▼</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="meta">并发数</span>
+      <input type="number" id="trConc" min="1" max="16" style="width:64px" value="8">
+      <span class="meta">每批条数</span>
+      <input type="number" id="trBatch" min="1" max="40" style="width:64px" value="12">
+      <span class="meta">翻译风格</span>
+      <select id="trStyle" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
+        <option value="faithful">严苛忠实</option>
+        <option value="balanced" selected>均衡自然</option>
+        <option value="playful">生动有趣</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- name confirmation modal -->
+  <div id="nmModal" class="hide">
+    <div id="nmBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(680px,94vw);max-height:84vh;display:flex;flex-direction:column;padding:16px">
+      <b>人名 / 专有名词确认</b>
+      <div class="meta" style="margin:6px 0 10px">机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。</div>
+      <div id="nmList" style="flex:1;overflow:auto"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="ghost" onclick="nmSave()">✓ 确认并开始翻译</button>
+        <button class="ghost" onclick="nmSkip()">全部交给自动（跳过）</button>
+        <span class="grow"></span>
+        <button onclick="nmClose()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- review queue modal -->
+  <div id="rvModal" class="hide">
+    <div id="rvBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(1000px,94vw);height:86vh;display:flex;flex-direction:column;padding:16px">
+      <div class="row">
+        <b>AI 校对队列</b>
+        <span class="meta" id="rvInfo"></span>
+        <span class="grow"></span>
+        <button class="ghost" onclick="rvRun()">重新校对</button>
+        <button onclick="rvClose()">关闭</button>
+      </div>
+      <div class="meta" style="margin:6px 0">AI 质检标记的疑似问题（语义偏差/丢梗/漏译）。三栏对照，一键裁决；裁决立即生效。</div>
+      <div id="rvList" style="flex:1;overflow:auto"></div>
+    </div>
+  </div>
+
+  <!-- consistency modal -->
+  <div id="csModal" class="hide">
+    <div id="csBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(980px,94vw);height:84vh;display:flex;flex-direction:column;padding:16px">
+      <div class="row">
+        <b>一致性统一</b>
+        <span class="meta" id="csInfo">扫描中…</span>
+        <span class="grow"></span>
+        <button onclick="csClose()">关闭</button>
+      </div>
+      <div class="meta" style="margin:6px 0">同一日文词出现多种译法的条目。AI 已给出建议统一版，可直接采纳、改用其他译法或跳过。</div>
+      <div id="csList" style="flex:1;overflow:auto"></div>
+    </div>
+  </div>
+
+  <div class="card" id="netCard" style="display:none">
+    <div class="row">
+      <b>网络与下载</b>
+      <span class="grow"></span>
+      <button class="ghost" onclick="toggleNet(false)">收起 ▲</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="meta">下载线程</span>
+      <input type="number" id="dlThreads" min="1" max="16" style="width:64px" value="6" title="zip 下载并发分片数(默认 6, 单镜像>4并发会被限流); 三镜像择速+断点续传自动生效">
+      <span class="meta">预取</span>
+      <select id="prefetch" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px" title="启动游戏时后台并行拉取全部资源到本地缓存; 二次启动零等待">
+        <option value="on">开启（推荐）</option>
+        <option value="off">关闭</option>
+      </select>
+      <span class="meta">出网口</span>
+      <select id="dlBind" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px" title="下载/回源绑定物理网卡直连(绕过 VPN TUN); 走代理时忽略">
+        <option value="default">系统默认</option>
+        <option value="direct">直连（绕VPN）</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="meta">代理</span>
+      <input type="text" id="dlProxy" class="grow" placeholder="http://host:port 或 socks5://host:port（留空=直连）">
+      <button class="ghost" onclick="saveNet()">保存网络设置</button>
+    </div>
+    <div class="meta" style="margin-top:6px">下载加速(多线程+三镜像)与启动预取默认开启; 此处仅调整细节。预取不阻塞游玩, 已缓存项自动跳过。</div>
+  </div>
+
+  <div class="card">
+    <b>游戏库</b>
+    <div id="games">加载中…</div>
+  </div>
+
+  <div id="trModal" class="hide">
+    <div id="trBox">
+      <div class="row">
+        <b id="trTitle">翻译对照表</b>
+        <input type="text" id="trSearch" class="grow" placeholder="搜索原文或译文…（回车）">
+        <label class="meta"><input type="checkbox" id="trUntr"> 只看未翻译</label>
+        <button class="ghost" onclick="trPage(-1)">‹ 上一页</button>
+        <span class="meta" id="trInfo"></span>
+        <button class="ghost" onclick="trPage(1)">下一页 ›</button>
+        <button onclick="trClose()">关闭</button>
+      </div>
+      <div class="meta" style="margin-top:6px">未翻译的行输入框为空，可直接手填并"保存"。编辑后游戏内刷新页面即生效。</div>
+      <div id="trTable"></div>
+    </div>
+  </div>
+</div>
+<script>
+// 真站直连架构(2026-08-27): 本页部署在 fan1.top 真站上, 本地 API 通过 https://fan1.top:<port> 走
+// 工具的 ad-direct 代理回到本地服务(CORS 已放行本源)。port 由工具启动时以 ?port= 传入。
+const API_BASE = "https://fan1.top:" + (new URLSearchParams(location.search).get("port") || "443");
+</script>
+<script>
+let currentId = null, timer = null;
+const $ = s => document.querySelector(s);
+const parseId = v => (String(v).match(/(\d+)/) || [])[1] || "";
+
+async function startGame() {
+  const id = parseId($("#gameInput").value);
+  if (!id) return alert("请输入游戏ID或网址");
+  await saveCfg();
+  $("#startHint").textContent = "已提交 " + id + "，进度在下方游戏库中实时显示";
+  await fetch(`/api/start/${id}`, { method: "POST" });
+  refreshGames();
+  $("#gameInput").value = "";
+}
+function fmtMB(b) { return (b / 1048576).toFixed(1) + "MB"; }
+function jobPct(j) {
+  const p = j.progress || {};
+  if (j.stage === "names") return 3;
+  if (p.kind === "download" && p.total) return Math.min(99, Math.round((p.bytes !== undefined ? p.bytes : p.files) / p.total * 100));
+  if (p.kind === "translate" && p.total) return Math.round(p.done / p.total * 100);
+  if (j.stage === "review") return p.total ? Math.round((p.checked||0) / p.total * 100) : 50;
+  if (j.stage === "done") return 100;
+  if (j.stage === "error") return 0;
+  return j.stage ? 10 : 0;
+}
+function jobLabel(j) {
+  const p = j.progress || {};
+  if (j.stage === "names") return "自动识别人名…";
+  if (p.kind === "download" && p.total) return p.bytes !== undefined
+    ? `下载 ${fmtMB(p.bytes)}/${fmtMB(p.total)}`
+    : `下载文本 ${p.files||0}/${p.total}`;
+  if (p.kind === "translate" && p.total) return `翻译 ${p.done||0}/${p.total}`;
+  if (j.stage === "review") return `校对 ${(p.checked||0)}/${(p.total||0)}`;
+  if (j.stage === "done") return "✅ 完成";
+  if (j.stage === "error") return "❌ " + (j.error||"").slice(0,50);
+  return j.stage || "";
+}
+async function saveCfg() {
+  await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
+    endpoint: $("#endpoint").value.trim(), model: $("#model").value.trim(), apiKey: $("#apiKey").value.trim(),
+    trConc: Number($("#trConc").value) || 8, trBatch: Number($("#trBatch").value) || 12,
+    style: $("#trStyle").value,
+  }) });
+}
+function toggleNet(show) { $("#netCard").style.display = show ? "" : "none"; }
+async function saveNet() {
+  await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
+    dlThreads: Number($("#dlThreads").value) || 6,
+    dlProxy: $("#dlProxy").value.trim(),
+    dlBind: $("#dlBind").value,
+    net: { prefetch: $("#prefetch").value },
+  }) });
+  alert("网络设置已保存");
+}
+async function openGame(id) {
+  const r = await fetch(`/api/open/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
+  if (!r || !r.ok) window.open(API_BASE + `/play/${id}/`, "_blank");
+}
+async function resume(id) {
+  await fetch(`/api/start/${id}`, { method: "POST" });
+  refreshGames();
+}
+async function del(id) {
+  if (!confirm(`删除游戏 ${id}?`)) return;
+  await fetch(`/api/delete/${id}`, { method: "POST" });
+  refreshGames();
+}
+// ---- translation table ----
+let trId = null, trOffset = 0;
+async function openTr(id, title) {
+  trId = id; trOffset = 0;
+  $("#trTitle").textContent = `翻译对照表 — ${title || id}`;
+  $("#trModal").classList.remove("hide");
+  $("#trSearch").value = "";
+  await trLoad();
+}
+function trClose() { $("#trModal").classList.add("hide"); }
+$("#trSearch").addEventListener("keydown", e => { if (e.key === "Enter") { trOffset = 0; trLoad(); } });
+$("#trUntr").addEventListener("change", () => { trOffset = 0; trLoad(); });
+async function trPage(d) { trOffset = Math.max(0, trOffset + d * 100); await trLoad(); }
+async function trLoad() {
+  const q = encodeURIComponent($("#trSearch").value.trim());
+  const f = $("#trUntr").checked ? "&filter=untranslated" : "";
+  const r = await fetch(`/api/tr/${trId}?q=${q}&offset=${trOffset}&limit=100${f}`).then(x => x.json());
+  if (!r.items) { $("#trTable").innerHTML = `<div style="padding:20px;color:var(--dim)">${r.error || "无数据"}</div>`; $("#trInfo").textContent = ""; return; }
+  $("#trInfo").textContent = `已译 ${r.translated}/${r.total} · 匹配 ${r.matched} · 第 ${trOffset + 1}-${Math.min(trOffset + 100, r.matched)} 条`;
+  $("#trTable").innerHTML = `<table><tr><th>原文 (日文)</th><th>译文 (中文)</th><th></th></tr>` +
+    r.items.map(x => `<tr${x.t === null ? ' style="opacity:.75"' : ""}>
+      <td class="o">${esc(x.o)}<details style="margin-top:4px"><summary class="meta" style="cursor:pointer">逐字对照</summary><div class="trAlign" data-jp="${esc(x.o)}" data-loaded="0" style="padding:4px 0;color:var(--dim);font-size:12px">点击生成…</div></details></td>
+      <td><input data-o="${esc(x.o)}" value="${x.t === null ? "" : esc(x.t)}" placeholder="${x.t === null ? "（未翻译）" : ""}"></td>
+      <td><button class="saveBtn" onclick="trSave(this)">保存</button> ${x.t === null ? "" : '<button class="saveBtn" onclick="trDel(this)">✕</button>'}</td>
+    </tr>`).join("") + `</table>`;
+  // lazy-load alignment on details open
+  document.querySelectorAll(".trAlign").forEach(el => {
+    el.parentElement.addEventListener("toggle", async () => {
+      if (!el.parentElement.open || el.dataset.loaded === "1") return;
+      el.dataset.loaded = "1";
+      el.textContent = "对齐中…";
+      const r = await fetch(`/api/align/${trId}`, { method: "POST", body: JSON.stringify({ lines: [el.dataset.jp] }) }).then(x => x.json()).catch(() => null);
+      if (r && r.pairs && r.pairs.length) {
+        el.innerHTML = r.pairs.map(p => `<div><span style="color:#aeb9c6">${esc(p.jp)}</span> ⇄ <b>${esc(p.cn)}</b></div>`).join("");
+      } else el.textContent = "（无对齐数据）";
+    });
+  });
+}
+async function trSave(btn) {
+  const input = btn.parentElement.previousElementSibling.querySelector("input");
+  const o = input.dataset.o, t = input.value;
+  const r = await fetch(`/api/tr/${trId}`, { method: "POST", body: JSON.stringify({ o, t }) }).then(x => x.json());
+  if (r.ok) { btn.classList.remove("dirty"); btn.textContent = "已存✓"; setTimeout(() => btn.textContent = "保存", 1200); }
+  else alert(r.error || "保存失败");
+}
+async function trDel(btn) {
+  const input = btn.parentElement.previousElementSibling.querySelector("input");
+  const o = input.dataset.o;
+  if (!confirm("删除该条译文？（游戏中此句将恢复日文）")) return;
+  const r = await fetch(`/api/tr/${trId}?o=${encodeURIComponent(o)}`, { method: "DELETE" }).then(x => x.json());
+  if (r.ok) trLoad();
+}
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+async function shutdown() {
+  if (!confirm("退出汉化服务？正在游戏中也会断开。")) return;
+  await fetch(API_BASE + "/api/shutdown", { method: "POST" }).catch(() => {});
+  window.close();
+  setTimeout(() => location.replace("about:blank"), 800);
+}
+// ---- name confirmation ----
+let nmId = null;
+async function openNames(id) {
+  nmId = id;
+  const r = await fetch(`/api/names/${id}`).then(x => x.json());
+  const cands = r.candidates || [];
+  if (!cands.length) return alert("未检测到待确认名词");
+  const confirmed = r.confirmed || {};
+  $("#nmList").innerHTML = cands.map((c, i) => `<div class="row" style="padding:4px 0;border-bottom:1px solid #222a33">
+    <span style="width:190px">${esc(c)}</span>
+    <input type="text" class="grow nmInput" data-jp="${esc(c)}" value="${esc(confirmed[c] || "")}" placeholder="译名（留空=自动）">
+  </div>`).join("");
+  $("#nmModal").classList.remove("hide");
+}
+function nmClose() { $("#nmModal").classList.add("hide"); }
+async function nmSave() {
+  const names = {};
+  document.querySelectorAll(".nmInput").forEach(inp => { if (inp.value.trim()) names[inp.dataset.jp] = inp.value.trim(); });
+  const r = await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names }) }).then(x => x.json());
+  nmClose();
+  if (r.applied) alert(`已确认并全文统一 ${r.applied} 处（游戏内刷新生效）`);
+  else { alert("已确认，翻译继续"); currentId = nmId; resume(nmId); }
+}
+async function nmSkip() {
+  await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names: {} }) });
+  nmClose();
+  currentId = nmId; resume(nmId);
+}
+
+// ---- review queue ----
+let rvId = null;
+async function openReview(id) {
+  rvId = id;
+  // live progress if a review is running
+  const j = await fetch(`/api/job?id=${id}`).then(x => x.json());
+  const p = j.progress || {};
+  if (j.stage === "review" && p.kind === "review") {
+    const pct = p.total ? Math.round(p.checked / p.total * 100) : 0;
+    $("#rvInfo").innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div style="width:${pct}%"></div></div> AI 校对中 ${p.checked || 0}/${p.total || 0}（已标记 ${p.flagged || 0} 条）— 当前结果实时可读`;
+  } else {
+    $("#rvInfo").textContent = "";
+  }
+  const r = await fetch(`/api/review/${id}`).then(x => x.json());
+  const items = r.items || [];
+  if (!$("#rvInfo").textContent && !$("#rvInfo").innerHTML.includes("bar")) $("#rvInfo").textContent = `${items.length} 条待裁决`;
+  if (!items.length && !$("#rvInfo").innerHTML.includes("bar")) {
+    $("#rvList").innerHTML = '<div style="padding:20px;color:var(--dim)">队列为空 — 点「重新校对」开始 AI 质检</div>';
+  } else {
+    $("#rvList").innerHTML = items.map(x => `<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px">
+      <div class="meta">${issueTag(x.issue)} ${esc(x.note || "")}</div>
+      <table style="width:100%;font-size:13px;margin-top:6px"><tr>
+        <td style="width:33%;color:#aeb9c6;vertical-align:top">原文<br>${esc(x.jp)}</td>
+        <td style="width:33%;vertical-align:top">现译<br>${esc(x.cur)}</td>
+        <td style="width:34%;vertical-align:top;color:var(--warn)">AI直译<br>${esc(x.literal)}</td>
+      </tr></table>
+      <div class="row" style="margin-top:6px">
+        <button onclick="rvDecide('${esc(x.jp)}','keep')">保留现译</button>
+        <button class="ghost" onclick="rvDecide('${esc(x.jp)}','literal')">采用直译</button>
+        <input type="text" class="grow rvCustom" data-jp="${esc(x.jp)}" placeholder="或在此输入自定义译文…">
+        <button class="ghost" onclick="rvCustom(this)">自定义</button>
+      </div>
+    </div>`).join("");
+    // auto-refresh while running
+    if (j.stage === "review") { clearTimeout(window.__rvTimer); window.__rvTimer = setTimeout(() => { if (!$("#rvModal").classList.contains("hide")) openReview(id); }, 5000); }
+  }
+  $("#rvModal").classList.remove("hide");
+}
+function issueTag(issue) {
+  const m = { meaning_diverge: "语义偏差", pun_lost: "梗丢失/误解", omission: "漏译" };
+  return `<span class="tag part">${m[issue] || issue}</span>`;
+}
+function rvClose() { clearTimeout(window.__rvTimer); $("#rvModal").classList.add("hide"); }
+async function rvDecide(jp, decision) {
+  const r = await fetch(`/api/review/${rvId}`, { method: "POST", body: JSON.stringify({ jp, decision }) }).then(x => x.json());
+  if (r.remaining === 0) rvClose(); else openReview(rvId);
+}
+async function rvCustom(btn) {
+  const inp = btn.previousElementSibling;
+  const jp = inp.dataset.jp;
+  if (!inp.value.trim()) return;
+  await fetch(`/api/review/${rvId}`, { method: "POST", body: JSON.stringify({ jp, decision: "custom", custom: inp.value.trim() }) }).then(x => x.json());
+  openReview(rvId);
+}
+async function rvRun() {
+  await fetch(`/api/review/${rvId}`, { method: "PUT" });
+  alert("校对已启动（需翻译已完成且有 API 配置）");
+  setTimeout(() => openReview(rvId), 15000);
+}
+
+// ---- consistency (interactive) ----
+let csId = null;
+async function openConsistency(id) {
+  csId = id;
+  $("#csModal").classList.remove("hide");
+  $("#csInfo").innerHTML = `本地扫描中… <div class="bar" style="width:200px;display:inline-block;vertical-align:middle"><div id="csLocalBar" style="width:30%;transition:width .3s"></div></div>`;
+  $("#csList").innerHTML = '<div style="padding:20px;color:var(--dim)">⏳ 本地扫描中…</div>';
+  const t0 = Date.now();
+  const grow = setInterval(() => { const b = document.getElementById("csLocalBar"); if (b) b.style.width = Math.min(90, 30 + (Date.now() - t0) / 50) + "%"; }, 200);
+  try {
+    const r = await fetch(`/api/consistency/${id}`).then(x => x.json());
+    clearInterval(grow);
+    const b = document.getElementById("csLocalBar"); if (b) b.style.width = "100%";
+    if (!(r.issues || []).length) { $("#csInfo").textContent = "0 条不一致"; $("#csList").innerHTML = '<div style="padding:20px;color:var(--dim)">✅ 未发现同一词多种译法</div>'; return; }
+    renderCs(r.issues);
+  } catch (e) { clearInterval(grow); $("#csInfo").textContent = "扫描失败：" + e.message; }
+}
+function renderCs(issues) {
+  window.__csIssues = issues;
+  const hasAnyAI = issues.some(i => i.unified);
+  $("#csInfo").textContent = `${issues.length} 条不一致${hasAnyAI ? "" : "（AI 建议未生成）"}`;
+  $("#csList").innerHTML = issues.map((x, i) => `<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px" data-i="${i}">
+    <div class="row"><b>${esc(x.token)}</b><span class="meta">${x.occurrences} 处出现 · ${x.forms.length} 种译法</span></div>
+    <div style="margin:6px 0;font-size:13px">${x.forms.map(f => `<span class="tag ${f.form === (x.unified || "") ? "cn" : "jp"}" style="margin-right:6px">${esc(f.form)} ×${f.count}</span>`).join("")}</div>
+    ${x.unified ? `<div class="meta">AI 建议：<b style="color:var(--ok)">${esc(x.unified)}</b>${x.reason ? " — " + esc(x.reason) : ""}</div>` : ""}
+    <details style="margin:4px 0"><summary class="meta">例句</summary>${(x.examples || []).map(e => `<div class="meta">· ${esc(e.jp)}<br>&nbsp;&nbsp;→ ${esc(e.cn)}</div>`).join("")}</details>
+    <div class="row" style="margin-top:4px">
+      ${x.unified ? `<button onclick="csUnify(${i}, '${esc(x.unified)}')">统一为「${esc(x.unified)}」</button>` : ""}
+      <input type="text" class="grow csCustom" data-i="${i}" data-token="${esc(x.token)}" placeholder="自定义统一译名…">
+      <button class="ghost" onclick="csCustom(this)">按自定义统一</button>
+    </div>
+  </div>`).join("") +
+  `<div class="row" style="margin-top:10px"><button class="ghost" onclick="csAskAI()">✨ 生成 AI 建议（约 1 分钟）</button><span class="meta" id="csAiStatus"></span></div>`;
+}
+async function csAskAI() {
+  const tokens = (window.__csIssues || []).map(i => i.token);
+  if (!tokens.length) return;
+  const status = $("#csAiStatus");
+  status.innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div id="csAiBar" style="width:5%"></div></div> <span id="csAiText">准备中…</span>`;
+  await fetch(`/api/consistency/${csId}`, { method: "PUT", body: JSON.stringify({ tokens }) });
+  // poll progress
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const j = await fetch(`/api/job?id=${csId}%3Acs`).then(x => x.json());
+    const p = j.progress || {};
+    if (j.stage === "done" && p.phase === "done" && p.suggestions) {
+      const map = Object.fromEntries(p.suggestions.map(s => [s.token, s]));
+      for (const iss of window.__csIssues) {
+        if (map[iss.token]) { iss.unified = map[iss.token].unified; iss.reason = map[iss.token].reason; }
+      }
+      renderCs(window.__csIssues);
+      return;
+    }
+    if (p.phase === "scan") {
+      const pct = p.total ? Math.round(p.done / p.total * 90) : 10;
+      const bar = document.getElementById("csAiBar"); if (bar) bar.style.width = pct + "%";
+      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = `本地扫描 ${p.done}/${p.total}（已发现 ${p.found} 条）`;
+    } else if (p.phase === "ai") {
+      const bar = document.getElementById("csAiBar"); if (bar) bar.style.width = "95%";
+      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = "AI 分析译名建议中…（约 1 分钟）";
+    }
+  }
+  status.textContent = "超时，可重试";
+}
+function csClose() { $("#csModal").classList.add("hide"); }
+async function csUnify(i, unified) {
+  const iss = window.__csIssues[i];
+  const r = await fetch(`/api/consistency/${csId}`, { method: "POST", body: JSON.stringify({ token: iss.token, unified }) }).then(x => x.json());
+  if (r.ok) openConsistency(csId); // rescan
+  else alert("失败: " + (r.error || "未知"));
+}
+async function csCustom(btn) {
+  const inp = btn.parentElement.querySelector(".csCustom") || btn.previousElementSibling;
+  const val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  btn.disabled = true; btn.textContent = "统一中…";
+  try {
+    const r = await fetch(`/api/consistency/${csId}`, { method: "POST", body: JSON.stringify({ token: inp.dataset.token, unified: val }) }).then(x => x.json());
+    if (!r.ok) alert("失败: " + (r.error || "未知"));
+    else if (!r.changed) { btn.textContent = "无变化"; setTimeout(() => { btn.disabled = false; btn.textContent = "按自定义统一"; }, 1200); return; }
+    openConsistency(csId);
+  } catch (e) { alert("请求失败: " + e.message); btn.disabled = false; btn.textContent = "按自定义统一"; }
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") { trClose(); nmClose(); rvClose(); csClose(); } });
+async function refreshGames() {
+  const list = await fetch(API_BASE + "/api/games").then(x => x.json());
+  // poll active jobs for inline progress
+  const jobs = {};
+  await Promise.all(list.map(async g => {
+    try { jobs[g.id] = await fetch(`/api/job?id=${g.id}`).then(x => x.json()); } catch {}
+  }));
+  const el = $("#games");
+  if (!list.length) { el.innerHTML = '<span class="meta">暂无游戏</span>'; return; }
+  el.innerHTML = list.map(g => {
+    const st = !g.stringsN ? "jp" : g.trN >= g.stringsN ? "cn" : "part";
+    const label = st === "cn" ? "已汉化" : st === "part" ? `翻译中 ${g.trN}/${g.stringsN}` : "日文";
+    const typeTag = g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">下载版</span>` : "";
+    const j = jobs[g.id] || {};
+    const jp = jobPct(j);
+    const jl = jobLabel(j);
+    const jobHtml = (jl && j.stage && j.stage !== "done" && j.stage !== "error")
+      ? `<div class="job-line"><div class="bar" style="width:100px;height:5px;display:inline-block;vertical-align:1px"><div style="width:${jp}%;background:var(--acc);height:100%"></div></div> <span style="color:var(--dim);font-size:11px">${jl}</span></div>`
+      : (j.stage === "error" ? `<div class="job-line" style="color:var(--err);font-size:11px">❌ ${(j.error||"").slice(0,60)}</div>`
+        : (!j.stage && g.type === "download" && !g.ready ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 点击"续翻"恢复下载</div>` : ""));
+    return `<div class="game">
+      <div class="grow"><b>${g.title || g.id}</b><span class="tag ${st}">${label}</span>${typeTag}<div class="meta">ID ${g.id}</div>${jobHtml}</div>
+      ${st !== "cn" ? `<button class="ghost" onclick="resume(${g.id})">续翻</button>` : ""}
+      <button onclick="openGame(${g.id})">▶ 进入</button>
+      <button class="ghost" onclick='openTr(${g.id}, ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>对照表</button>
+      <button class="ghost" onclick="openNames(${g.id})">人名</button>
+      <button class="ghost" onclick="openReview(${g.id})">校对</button>
+      <button class="ghost" onclick="openConsistency(${g.id})">一致</button>
+      <button class="danger" onclick="del(${g.id})">删除</button>
+    </div>`;
+  }).join("");
+  // auto-refresh every 3s if any game is actively processing
+  const active = list.some(g => { const j = jobs[g.id]; return j && j.stage && j.stage !== "done" && j.stage !== "error"; });
+  if (active) setTimeout(refreshGames, 3000);
+}
+setInterval(refreshGames, 30000); // light refresh every 30s when idle
+(async () => {
+  const c = await fetch(API_BASE + "/api/cfg").then(x => x.json());
+  $("#endpoint").value = c.endpoint || ""; $("#model").value = c.model || "";
+  if (c.trConc) $("#trConc").value = c.trConc;
+  if (c.trBatch) $("#trBatch").value = c.trBatch;
+  if (c.style) $("#trStyle").value = c.style;
+  if (c.dlThreads) $("#dlThreads").value = c.dlThreads;
+  if (c.dlProxy) $("#dlProxy").value = c.dlProxy;
+  if (c.dlBind) $("#dlBind").value = c.dlBind;
+  if (c.adBypass) $("#dlBind").value = c.adBypass; // 显示别名(历史键)
+  if (c.net && c.net.prefetch) $("#prefetch").value = c.net.prefetch;
+  refreshGames();
+})();
+</script>
+<!-- Monetag vignette ad (zone 11663937): injected at end of body; old 3-slot banner bar removed 2026-08-18 -->
+<script>
+// console window = service lifetime. Closing it ends the tool (and running games).
+let consoleClosing = false;
+window.addEventListener("beforeunload", e => {
+  if (consoleClosing) return; // user already confirmed exit — let it close silently
+  e.preventDefault();
+  e.returnValue = "关闭窗口将退出 freem 汉化（正在游玩的游戏也会关闭）。要继续请点击“留在本页”，或将窗口最小化。";
+  return e.returnValue;
+});
+// real close (user confirmed): notify service to stop — sendBeacon survives unload
+window.addEventListener("pagehide", () => {
+  try { navigator.sendBeacon("/api/console-closed"); } catch {}
+});
+// heartbeat every 5s: service stops ~3-8s after the console window truly closes
+setInterval(() => { try { fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {}); } catch {} }, 5000);
+fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
+</script>
+<script>
+// ---- ad click containment ----
+// Ad networks' iframes open popups via window.open / target=_blank which in --app mode
+// take over the whole window. Contain them: capture window.open and route popups to a
+// small, always-closable window instead of fullscreen app takeovers.
+(() => {
+  const origOpen = window.open.bind(window);
+  window.open = function (url, ...rest) {
+    try {
+      // open as a small auxiliary window (not the app window), resizable & closable
+      return origOpen(url, "_blank", "width=900,height=640,menubar=no,toolbar=no,location=yes,resizable=yes");
+    } catch { return origOpen(url, ...rest); }
+  };
+  // stop target=_blank navigations inside ad iframes from stealing our window:
+  // (same-origin only; cross-origin iframe clicks become window.open via above hook)
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a[target=_blank]");
+    if (!a) return;
+    e.preventDefault();
+    window.open(a.href, "_blank", "width=900,height=640,menubar=no,toolbar=no,location=yes,resizable=yes");
+  }, true);
+})();
+</script>
+
+})();
+
+</script>
+</body>
+</html>
