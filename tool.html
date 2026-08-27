@@ -2,35 +2,52 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<script>(function(s){s.dataset.zone='11664343',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <title>freem 汉化</title>
 <meta name="robots" content="noindex">
 <style>
-  :root { --bg:#111418; --card:#1a1f26; --line:#2a323c; --txt:#dfe6ee; --dim:#8a97a6; --acc:#4da3ff; --ok:#3ecf8e; --err:#ff6b6b; }
+  :root { --bg:#0f1216; --bg2:#131922; --card:#1a212b; --line:#2b3441; --line2:#37424f; --txt:#e4ebf4; --dim:#8f9bab; --acc:#4da3ff; --acc2:#2c7fd9; --ok:#3ecf8e; --warn:#ffb454; --err:#ff6b6b; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--txt); font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif; padding:24px; }
-  .wrap { max-width:860px; margin:0 auto; } /* 2026-08-27 定稿: 居中——左右各留一列 160px 纵向 banner */
-  h1 { font-size:20px; margin-bottom:4px; }
-  .sub { color:var(--dim); font-size:12px; margin-bottom:18px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
+  body { background:radial-gradient(1200px 500px at 50% -100px, #16202c, var(--bg)); color:var(--txt); font:14px/1.65 "Segoe UI","Microsoft YaHei",sans-serif; padding:28px 24px; }
+  .wrap { max-width:860px; margin:0 auto; } /* 居中——左右各留一列 160px 纵向 banner */
+  /* 头部 */
+  .hero { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+  .hero .logo { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,var(--acc),#7cc4ff); display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; box-shadow:0 4px 14px rgba(77,163,255,.35); }
+  .hero .t { flex:1; }
+  h1 { font-size:21px; letter-spacing:.5px; }
+  .sub { color:var(--dim); font-size:12px; margin-top:2px; }
+  /* 卡片 */
+  .card { background:linear-gradient(180deg,var(--card),#181e27); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:18px; box-shadow:0 4px 18px rgba(0,0,0,.25); }
+  .card h2 { font-size:15px; font-weight:700; color:var(--txt); border-left:3px solid var(--acc); padding-left:10px; margin-bottom:14px; letter-spacing:.5px; }
   .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  input { background:#0d1014; border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:8px 10px; font-size:14px; outline:none; }
-  input:focus { border-color:var(--acc); }
-  button { background:var(--acc); border:none; color:#fff; border-radius:6px; padding:8px 16px; font-size:14px; cursor:pointer; }
+  input, select { background:#0c1015; border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:9px 12px; font-size:14px; outline:none; transition:border-color .15s, box-shadow .15s; }
+  input:focus, select:focus { border-color:var(--acc); box-shadow:0 0 0 3px rgba(77,163,255,.15); }
+  /* 按钮体系: 主/次/危险 三级, 统一尺寸与过渡 */
+  button { background:linear-gradient(180deg,var(--acc),var(--acc2)); border:none; color:#fff; border-radius:8px; padding:8px 16px; font-size:13px; cursor:pointer; transition:filter .15s, transform .06s, border-color .15s; box-shadow:0 2px 8px rgba(44,127,217,.3); }
   button:hover { filter:brightness(1.12); }
-  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
-  button.danger { background:var(--err); }
+  button:active { transform:translateY(1px); }
+  button.ghost { background:transparent; border:1px solid var(--line2); color:#b8c4d4; box-shadow:none; }
+  button.ghost:hover { border-color:var(--acc); color:#fff; }
+  button.danger { background:transparent; border:1px solid rgba(255,107,107,.5); color:var(--err); box-shadow:none; }
+  button.danger:hover { background:rgba(255,107,107,.12); border-color:var(--err); }
+  button.big { padding:10px 22px; font-size:14px; font-weight:700; }
   .grow { flex:1; }
-  .tag { font-size:11px; border-radius:4px; padding:1px 8px; margin-left:8px; }
-  .tag.cn { background:rgba(62,207,142,.15); color:var(--ok); }
-  .tag.part { background:rgba(255,180,84,.15); color:#ffb454; }
-  .tag.jp { background:rgba(138,151,166,.15); color:var(--dim); }
-  .game { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); }
+  /* 状态徽章: 胶囊 + 语义色 */
+  .tag { font-size:11px; border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:2px; font-weight:600; }
+  .tag.cn { background:rgba(62,207,142,.16); color:var(--ok); }
+  .tag.part { background:rgba(255,180,84,.16); color:var(--warn); }
+  .tag.jp { background:rgba(143,155,171,.16); color:var(--dim); }
+  /* 游戏条目 */
+  .game { display:flex; align-items:center; gap:12px; padding:13px 10px; border-bottom:1px solid var(--line); border-radius:8px; transition:background .15s; flex-wrap:wrap; }
+  .game:hover { background:rgba(77,163,255,.05); }
   .game:last-child { border-bottom:none; }
+  .game b { font-size:14.5px; }
+  .game .acts { display:flex; gap:8px; flex-wrap:wrap; }
   .meta { color:var(--dim); font-size:12px; }
-    .game .bar { display:inline-block; width:120px; height:5px; background:#0d1014; border-radius:3px; overflow:hidden; vertical-align:1px; }
-    .game .bar > div { height:100%; background:var(--acc); transition:width .4s; }
+    .game .bar { display:inline-block; width:120px; height:5px; background:#0c1015; border-radius:3px; overflow:hidden; vertical-align:1px; }
+    .game .bar > div { height:100%; background:linear-gradient(90deg,var(--acc),#7cc4ff); transition:width .4s; }
     .game .job-line { font-size:11px; color:var(--dim); margin-top:3px; }
-  pre#log { background:#0d1014; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; white-space:pre-wrap; color:#9fb0c3; }
+  pre#log { background:#0c1015; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; }
   a { color:var(--acc); text-decoration:none; }
   .hide { display:none !important; }
   /* 对照表 modal */
@@ -50,13 +67,19 @@
 </head>
 <body>
   <div class="wrap">
-  <h1>freem 汉化 <button class="ghost" style="vertical-align:3px;font-size:12px;padding:2px 12px" onclick="shutdown()">⏻ 退出程序</button></h1>
-  <div class="sub"></div>
+  <div class="hero">
+    <div class="logo">🎮</div>
+    <div class="t">
+      <h1>freem 汉化</h1>
+      <div class="sub">日本 freem 网页游戏 · 一键中文化</div>
+    </div>
+    <button class="ghost" onclick="shutdown()">⏻ 退出程序</button>
+  </div>
 
   <div class="card">
     <div class="row">
       <input type="text" id="gameInput" class="grow" placeholder="游戏ID 或 网址（如 35127）">
-      <button onclick="startGame()">启动 / 添加游戏</button>
+      <button class="big" onclick="startGame()">🚀 启动 / 添加游戏</button>
     </div>
     <div id="startHint" class="meta" style="margin-top:6px"></div>
   </div>
@@ -545,6 +568,7 @@ async function refreshGames() {
         : (!j.stage && g.type === "download" && !g.ready ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 点击"续翻"恢复下载</div>` : ""));
     return `<div class="game">
       <div class="grow"><b>${g.title || g.id}</b><span class="tag ${st}">${label}</span>${typeTag}<div class="meta">ID ${g.id}</div>${jobHtml}</div>
+      <div class="acts">
       ${st !== "cn" ? `<button class="ghost" onclick="resume(${g.id})">续翻</button>` : ""}
       <button onclick="openGame(${g.id})">▶ 进入</button>
       <button class="ghost" onclick='openTr(${g.id}, ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>对照表</button>
@@ -552,6 +576,7 @@ async function refreshGames() {
       <button class="ghost" onclick="openReview(${g.id})">校对</button>
       <button class="ghost" onclick="openConsistency(${g.id})">一致</button>
       <button class="danger" onclick="del(${g.id})">删除</button>
+      </div>
     </div>`;
   }).join("");
   } finally {
@@ -623,18 +648,25 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 
 <!-- 双侧广告列（2026-08-27 定稿）：Adsterra 160x600 纵向 banner ×2，内容居中，左右对称不遮挡 -->
 <div id="adColL" style="position:fixed;top:50%;left:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
-  <script>
-  atOptions = { 'key' : '0f7390460e9afa804c4928d4d3f676cf', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };
-</script>
-<script src="https://manyapostle.com/0f7390460e9afa804c4928d4d3f676cf/invoke.js"></script>
+  <iframe id="adColLFr" scrolling="no" style="width:160px;height:600px;border:0;display:block" title="ad"></iframe>
 </div>
 <div id="adColR" style="position:fixed;top:50%;right:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
-  <script>
-  atOptions = { 'key' : '0f7390460e9afa804c4928d4d3f676cf', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };
-</script>
-<script src="https://manyapostle.com/0f7390460e9afa804c4928d4d3f676cf/invoke.js"></script>
+  <iframe id="adColRFr" scrolling="no" style="width:160px;height:600px;border:0;display:block" title="ad"></iframe>
 </div>
-
+<script>
+(function () {
+  var fl = document.getElementById("adColLFr");
+  var fr = document.getElementById("adColRFr");
+  function refresh() {
+    var b = Date.now();
+    fl.src = "/adframe?slot=0&bust=L" + b;   // 左列: 当前 zone
+    fr.src = "/adframe?slot=1&bust=R" + b;   // 右列: 第二单元(未配置时 /adframe 返回空文档, 不报错)
+  }
+  refresh();
+  // 60s 轮换: Adsterra banner 允许自动刷新（区别于 Monetag 条款）
+  setInterval(refresh, 60000);
+})();
+</script>
 
 
 <!-- 更新提醒（2026-08-28）：网站发新版 Release 后弹横幅 -->
@@ -647,6 +679,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 (function () {
   var bar = document.getElementById("updBar");
   if (!bar) return;
+  var dismissed = sessionStorage.getItem("updDismissed");
   function check() {
     fetch(API_BASE + "/api/version").then(function (r) { return r.json(); }).then(function (v) {
       if (v && v.update && v.update.available && !sessionStorage.getItem("updDismissed")) {
