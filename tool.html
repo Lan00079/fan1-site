@@ -187,14 +187,28 @@ let currentId = null, timer = null;
 const $ = s => document.querySelector(s);
 const parseId = v => (String(v).match(/(\d+)/) || [])[1] || "";
 
+// UX修复(添加游戏后不立即显示): 提交后立即在游戏库顶部显示占位行(⏳ 添加中),
+// 并以 1s 快轮询跟踪, 直到服务端把它列进 /api/games —— 不再干等 30s 慢刷新。
+const pendingIds = new Map(); // id -> 提交时间戳(占位行防呆: 服务重启等异常 3 分钟后自动撤下)
 async function startGame() {
   const id = parseId($("#gameInput").value);
   if (!id) return alert("请输入游戏ID或网址");
   await saveCfg();
-  $("#startHint").textContent = "已提交 " + id + "，进度在下方游戏库中实时显示";
-  await fetch(`/api/start/${id}`, { method: "POST" });
-  refreshGames();
   $("#gameInput").value = "";
+  pendingIds.set(id, Date.now());
+  $("#startHint").textContent = "已提交 " + id + "，进度在下方游戏库中实时显示";
+  refreshGames();
+  const r = await fetch(`/api/start/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
+  if (!r) { pendingIds.delete(id); $("#startHint").textContent = "提交失败（服务无响应），请重试"; return; }
+  if (r.error) { $("#startHint").textContent = `${id}：${r.error}`; if (r.error !== "任务进行中") pendingIds.delete(id); }
+  refreshGames();
+}
+function pendingDrop(id) { pendingIds.delete(String(id)); refreshGames(); }
+async function pendingRetry(id) {
+  id = String(id);
+  pendingIds.set(id, Date.now());
+  await fetch(`/api/start/${id}`, { method: "POST" }).catch(() => {});
+  refreshGames();
 }
 function fmtMB(b) { return (b / 1048576).toFixed(1) + "MB"; }
 function jobPct(j) {
@@ -217,6 +231,9 @@ function jobLabel(j) {
   if (j.stage === "review") return `校对 ${(p.checked||0)}/${(p.total||0)}`;
   if (j.stage === "done") return "✅ 完成";
   if (j.stage === "error") return "❌ " + (j.error||"").slice(0,50);
+  if (j.stage === "download") return "识别游戏类型 / 准备下载…";
+  if (j.stage === "decrypt") return "解密游戏数据…";
+  if (j.stage === "translate") return "翻译准备中…";
   return j.stage || "";
 }
 async function saveCfg() {
@@ -481,16 +498,41 @@ async function csCustom(btn) {
   } catch (e) { alert("请求失败: " + e.message); btn.disabled = false; btn.textContent = "按自定义统一"; }
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape") { trClose(); nmClose(); rvClose(); csClose(); } });
+let gamesTimer = null, refreshingGames = false;
 async function refreshGames() {
-  const list = await fetch(API_BASE + "/api/games").then(x => x.json());
+  if (refreshingGames) return; // 防重入: 手动刷新/快轮询/慢刷新不叠加并发
+  refreshingGames = true;
+  let list = [], jobs = {};
+  try {
+  list = await fetch(API_BASE + "/api/games").then(x => x.json()).catch(() => []) || [];
   // poll active jobs for inline progress
-  const jobs = {};
   await Promise.all(list.map(async g => {
     try { jobs[g.id] = await fetch(`/api/job?id=${g.id}`).then(x => x.json()); } catch {}
   }));
+  // 提交中的新游戏(服务端尚未入库): 也拉取其任务进度, 在列表顶部渲染占位行
+  await Promise.all([...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid)).map(async pid => {
+    try { jobs[pid] = await fetch(`/api/job?id=${pid}`).then(x => x.json()); } catch {}
+  }));
+  for (const pid of [...pendingIds.keys()]) {
+    if (list.some(g => String(g.id) === pid)) { pendingIds.delete(pid); continue; } // 已入库 → 撤占位
+    const j = jobs[pid];
+    if (j && j.stage === "error") continue; // 失败占位保留(显示错误+重试), 由用户处置
+    if (Date.now() - (pendingIds.get(pid) || 0) > 180000) pendingIds.delete(pid); // 防呆超时自动撤下
+  }
+  const pend = [...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid));
   const el = $("#games");
-  if (!list.length) { el.innerHTML = '<span class="meta">暂无游戏</span>'; return; }
-  el.innerHTML = list.map(g => {
+  if (!list.length && !pend.length) { el.innerHTML = '<span class="meta">暂无游戏</span>'; }
+  else el.innerHTML = pend.map(pid => {
+    const j = jobs[pid] || {};
+    const err = j.stage === "error";
+    const line = err ? `❌ ${(j.error || "").slice(0, 60)}` : ((j.log && j.log.length) ? String(j.log[j.log.length - 1]).replace(/^\[[^\]]*\]\s*/, "") : "正在提交…");
+    return `<div class="game">
+      <div class="grow"><b>${pid}</b><span class="tag part">${err ? "添加失败" : "⏳ 添加中"}</span><div class="meta">ID ${pid}</div>
+      <div class="job-line" style="color:${err ? "var(--err)" : "var(--dim)"};font-size:11px">${esc(line)}</div></div>
+      ${err ? `<button class="ghost" onclick="pendingRetry(${pid})">重试</button>` : ""}
+      <button class="ghost" onclick="pendingDrop(${pid})">移除</button>
+    </div>`;
+  }).join("") + list.map(g => {
     const st = !g.stringsN ? "jp" : g.trN >= g.stringsN ? "cn" : "part";
     const label = st === "cn" ? "已汉化" : st === "part" ? `翻译中 ${g.trN}/${g.stringsN}` : "日文";
     const typeTag = g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">下载版</span>` : "";
@@ -512,11 +554,15 @@ async function refreshGames() {
       <button class="danger" onclick="del(${g.id})">删除</button>
     </div>`;
   }).join("");
-  // auto-refresh every 3s if any game is actively processing
-  const active = list.some(g => { const j = jobs[g.id]; return j && j.stage && j.stage !== "done" && j.stage !== "error"; });
-  if (active) setTimeout(refreshGames, 3000);
+  } finally {
+    refreshingGames = false;
+    // 单一定时链(替代旧的 3s 链+30s interval 双轨, 避免链叠加): 占位中 1s / 活动任务 3s / 空闲 30s
+    const active = list.some(g => { const j = jobs[g.id]; return j && j.stage && j.stage !== "done" && j.stage !== "error"; });
+    const pendN = [...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid)).length;
+    clearTimeout(gamesTimer);
+    gamesTimer = setTimeout(refreshGames, pendN ? 1000 : (active ? 3000 : 30000));
+  }
 }
-setInterval(refreshGames, 30000); // light refresh every 30s when idle
 (async () => {
   const c = await fetch(API_BASE + "/api/cfg").then(x => x.json());
   $("#endpoint").value = c.endpoint || ""; $("#model").value = c.model || "";
