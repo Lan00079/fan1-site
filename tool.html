@@ -9,7 +9,7 @@
   :root { --bg:#111418; --card:#1a1f26; --line:#2a323c; --txt:#dfe6ee; --dim:#8a97a6; --acc:#4da3ff; --ok:#3ecf8e; --err:#ff6b6b; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--txt); font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif; padding:24px; }
-  .wrap { max-width:860px; margin:0 auto; } /* 2026-08-27: 恢复居中——广告位已撤，UI 纯净 */
+  .wrap { max-width:860px; margin:0 0 0 24px; } /* 2026-08-27: 靠左布局——右侧留空给 Monetag 页内广告(右上角卡片), 不遮内容 */
   h1 { font-size:20px; margin-bottom:4px; }
   .sub { color:var(--dim); font-size:12px; margin-bottom:18px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
@@ -577,5 +577,9 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 })();
 
 </script>
+
+<!-- Monetag tag（zone 11664343）：行为型广告——无视觉容器, 脚本经隐藏 iframe 隔离加载, 弹窗按产品设计自行触发 -->
+<iframe src="/adframe?slot=0" style="width:0;height:0;border:0;position:absolute;left:-9999px" tabindex="-1" aria-hidden="true"></iframe>
+
 </body>
 </html>
