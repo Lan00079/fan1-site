@@ -54,6 +54,7 @@
   :root { --modal-max: min(960px, calc(100vw - 380px)); }
   /* 对照表 modal */
   #trModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:10; }
+  #rvModal, #csModal, #nmModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:10; }
   #trBox { background:var(--card); border:1px solid var(--line); border-radius:12px; width:var(--modal-max); height:86vh; display:flex; flex-direction:column; padding:16px; }
   #trTable { flex:1; overflow:auto; margin-top:10px; border:1px solid var(--line); border-radius:8px; }
   #trTable table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -111,7 +112,7 @@
 
   <!-- name confirmation modal -->
   <div id="nmModal" class="hide">
-    <div id="nmBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(680px,94vw);max-height:84vh;display:flex;flex-direction:column;padding:16px">
+    <div id="nmBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(680px,var(--modal-max));max-height:84vh;display:flex;flex-direction:column;padding:16px">
       <b>人名 / 专有名词确认</b>
       <div class="meta" style="margin:6px 0 10px">机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。</div>
       <div id="nmList" style="flex:1;overflow:auto"></div>
@@ -141,7 +142,7 @@
 
   <!-- consistency modal -->
   <div id="csModal" class="hide">
-    <div id="csBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(980px,94vw);height:84vh;display:flex;flex-direction:column;padding:16px">
+    <div id="csBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:var(--modal-max);height:84vh;display:flex;flex-direction:column;padding:16px">
       <div class="row">
         <b>一致性统一</b>
         <span class="meta" id="csInfo">扫描中…</span>
