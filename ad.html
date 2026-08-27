@@ -4,22 +4,24 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ad</title>
+<title>广告</title>
 <!-- Monetag vignette zone 11663937：更换 zone/广告商时只改这里，所有嵌入端自动生效 -->
 <script>(function(s){s.dataset.zone='11663937',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <style>
   html, body { margin:0; padding:0; height:100%; background:#111418; overflow:hidden; }
+  .ad-closebar { position:fixed; top:0; left:0; right:0; height:26px; background:#1a1f26; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; z-index:2147483647; }
+  .ad-closebar button { background:rgba(233,69,96,.92); color:#fff; border:none; border-radius:4px; padding:2px 10px; font-size:12px; cursor:pointer; line-height:18px; }
 </style>
 </head>
 <body>
+<div class="ad-closebar"><button id="adClose">×</button></div>
 <script>
-// 控制通道：向嵌入方（本地工具 iframe / 未来的 App WebView）报告 vignette 状态。
-// 事件：ready(页面脚本就绪) / rendered(检测到广告容器出现) / closed(广告容器被移除) / timeout(12秒未渲染)
+// 控制通道：向宿主（本地工具弹窗 / iframe / App WebView）报告 vignette 状态。
+// 事件：ready(脚本就绪) / rendered(广告容器出现) / closed(广告容器被移除) / timeout(12秒未渲染)
 (function () {
   var post = function (ev) { try { parent.postMessage({ source: "fan1-ad", event: ev }, "*"); } catch (e) {} };
   var rendered = false;
 
-  // vignette 渲染特征：被插入一个大尺寸的 overlay 容器或第三方 iframe
   function isAdNode(n) {
     if (!(n instanceof HTMLElement)) return false;
     if (n.tagName === "SCRIPT" || n.tagName === "STYLE") return false;
@@ -45,6 +47,11 @@
 
   setTimeout(function () { if (!rendered) post("timeout"); }, 12000);
   post("ready");
+
+  document.getElementById("adClose").onclick = function () {
+    post("closed");
+    try { window.close(); } catch (e) {}
+  };
 })();
 </script>
 </body>
