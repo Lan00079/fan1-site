@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ad</title>
+<!-- Monetag vignette zone 11663780：更换 zone/广告商时只改这里，所有嵌入端自动生效 -->
+<script>(function(s){s.dataset.zone='11663780',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#111418; overflow:hidden; }
+</style>
+</head>
+<body>
+<script>
+// 控制通道：向嵌入方（本地工具 iframe / 未来的 App WebView）报告 vignette 状态。
+// 事件：ready(页面脚本就绪) / rendered(检测到广告容器出现) / closed(广告容器被移除) / timeout(12秒未渲染)
+(function () {
+  var post = function (ev) { try { parent.postMessage({ source: "fan1-ad", event: ev }, "*"); } catch (e) {} };
+  var rendered = false;
+
+  // vignette 渲染特征：被插入一个大尺寸的 overlay 容器或第三方 iframe
+  function isAdNode(n) {
+    if (!(n instanceof HTMLElement)) return false;
+    if (n.tagName === "SCRIPT" || n.tagName === "STYLE") return false;
+    var r;
+    try { r = n.getBoundingClientRect(); } catch (e) { return false; }
+    return (r.width >= 200 && r.height >= 150) || (n.tagName === "IFRAME" && r.width > 50 && r.height > 50);
+  }
+
+  var mo = new MutationObserver(function (muts) {
+    for (var i = 0; i < muts.length; i++) {
+      var m = muts[i], j, list;
+      list = m.addedNodes;
+      for (j = 0; j < list.length; j++) {
+        if (!rendered && isAdNode(list[j])) { rendered = true; post("rendered"); }
+      }
+      list = m.removedNodes;
+      for (j = 0; j < list.length; j++) {
+        if (rendered && isAdNode(list[j])) { post("closed"); mo.disconnect(); }
+      }
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+
+  setTimeout(function () { if (!rendered) post("timeout"); }, 12000);
+  post("ready");
+})();
+</script>
+</body>
+</html>
