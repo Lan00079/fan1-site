@@ -108,6 +108,12 @@
         <option value="playful">生动有趣</option>
       </select>
     </div>
+    <div class="row" style="margin-top:8px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--dim);font-size:13px">
+        <input type="checkbox" id="autoReview" style="width:15px;height:15px;accent-color:var(--acc)">
+        翻译完成后自动 AI 校对（默认关闭——校对/一致性按需从游戏库手动运行）
+      </label>
+    </div>
   </div>
 
   <!-- name confirmation modal -->
@@ -204,8 +210,6 @@
   </div>
 </div>
 <script>
-// 真站直连架构(2026-08-27): 本页部署在 fan1.top 真站上, 本地 API 通过 https://fan1.top:<port> 走
-// 工具的 ad-direct 代理回到本地服务(CORS 已放行本源)。port 由工具启动时以 ?port= 传入。
 const API_BASE = "https://fan1.top:" + (window.__FORCE_PORT__ || new URLSearchParams(location.search).get("port") || (location.port || "443"));
 </script>
 <script>
@@ -267,6 +271,7 @@ async function saveCfg() {
     endpoint: $("#endpoint").value.trim(), model: $("#model").value.trim(), apiKey: $("#apiKey").value.trim(),
     trConc: Number($("#trConc").value) || 8, trBatch: Number($("#trBatch").value) || 12,
     style: $("#trStyle").value,
+    autoReview: $("#autoReview").checked,
   }) });
 }
 function toggleNet(show) { $("#netCard").style.display = show ? "" : "none"; }
@@ -606,6 +611,7 @@ async function refreshGames() {
   if (c.trConc) $("#trConc").value = c.trConc;
   if (c.trBatch) $("#trBatch").value = c.trBatch;
   if (c.style) $("#trStyle").value = c.style;
+  $("#autoReview").checked = !!c.autoReview;
   if (c.dlThreads) $("#dlThreads").value = c.dlThreads;
   if (c.dlProxy) $("#dlProxy").value = c.dlProxy;
   if (c.dlBind) $("#dlBind").value = c.dlBind;
