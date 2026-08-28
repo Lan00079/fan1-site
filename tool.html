@@ -47,6 +47,12 @@
     .game .bar { display:inline-block; width:120px; height:5px; background:#0c1015; border-radius:3px; overflow:hidden; vertical-align:1px; }
     .game .bar > div { height:100%; background:linear-gradient(90deg,var(--acc),#7cc4ff); transition:width .4s; }
     .game .job-line { font-size:11px; color:var(--dim); margin-top:3px; }
+    /* 2026-08-29 t1(缓存进度条): 缓存行——沿用 .bar 尺寸/圆角/过渡, 蓝=进行中(流动条纹) 绿=完成 */
+    .game .cache-line { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--dim); margin-top:3px; flex-wrap:wrap; }
+    .game .cache-line .bar { width:110px; }
+    .game .cache-line .bar > div.run { background:repeating-linear-gradient(45deg,var(--acc) 0 6px,#7cc4ff 6px 12px); animation:cacheflow .8s linear infinite; }
+    .game .cache-line .bar > div.full { background:linear-gradient(90deg,var(--ok),#7ee2ae); }
+    @keyframes cacheflow { from { background-position:0 0; } to { background-position:17px 0; } }
   pre#log { background:#0c1015; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; }
   a { color:var(--acc); text-decoration:none; }
   .hide { display:none !important; }
@@ -66,6 +72,11 @@
   .saveBtn { background:transparent; border:1px solid var(--line); color:var(--dim); border-radius:4px; padding:2px 10px; font-size:12px; cursor:pointer; }
   .saveBtn.dirty { color:var(--ok); border-color:var(--ok); }
   .pageBtn { background:transparent; border:1px solid var(--line); color:var(--txt); border-radius:4px; padding:3px 12px; cursor:pointer; font-size:13px; }
+  /* t2(本地导入): 导入弹层 + 通用进度条(不依赖 .game 作用域) */
+  #impModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:10; }
+  #impBox { background:var(--card); border:1px solid var(--line); border-radius:12px; width:min(560px,var(--modal-max)); max-height:84vh; overflow:auto; padding:18px; }
+  .bar.gen { display:inline-block; background:#0c1015; border-radius:3px; overflow:hidden; }
+  .bar.gen > div { height:100%; background:linear-gradient(90deg,var(--acc),#7cc4ff); transition:width .3s; }
 </style>
 </head>
 <body>
@@ -189,8 +200,37 @@
   </div>
 
   <div class="card">
-    <b>游戏库</b>
+    <div class="row" style="margin-bottom:10px">
+      <b style="font-size:15px">游戏库</b>
+      <span class="grow"></span>
+      <button class="ghost" onclick="l10nImportPick()">📦 导入汉化包</button>
+      <button class="ghost" onclick="impShow()">📥 导入本地游戏</button>
+    </div>
     <div id="games">加载中…</div>
+  </div>
+
+  <!-- t2(2026-08-29 本地导入): 导入本地游戏弹层 -->
+  <div id="impModal" class="hide">
+    <div id="impBox">
+      <div class="row">
+        <b>📥 导入本地游戏</b>
+        <span class="grow"></span>
+        <button class="ghost" onclick="impClose()">关闭</button>
+      </div>
+      <div class="meta" style="margin-top:6px">支持 RPG Maker MV/MZ 与 Wolf RPG 的本地游戏——选择游戏文件夹或 zip 压缩包，导入后自动识别引擎并进入既有「提取 → 翻译 → 游玩」流程。同名重复导入会覆盖更新。</div>
+      <div class="row" id="impPick" style="margin-top:14px">
+        <button onclick="document.querySelector('#impDir').click()">📂 选择游戏文件夹</button>
+        <button onclick="document.querySelector('#impZip').click()">🗜 选择 zip 压缩包</button>
+      </div>
+      <input type="file" id="impDir" webkitdirectory multiple class="hide">
+      <input type="file" id="impZip" accept=".zip" class="hide">
+      <div id="impProg" class="hide" style="margin-top:14px">
+        <div class="row"><b id="impName"></b><span class="grow"></span><span class="meta" id="impPct"></span></div>
+        <div class="bar gen" style="width:100%;height:6px;margin-top:6px"><div id="impBar" style="width:0%"></div></div>
+        <div class="meta" id="impStatus" style="margin-top:6px"></div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="impCancelBtn" onclick="impCancel()">取消导入</button></div>
+      </div>
+    </div>
   </div>
 
   <div id="trModal" class="hide">
@@ -220,6 +260,7 @@ const parseId = v => (String(v).match(/(\d+)/) || [])[1] || "";
 // UX修复(添加游戏后不立即显示): 提交后立即在游戏库顶部显示占位行(⏳ 添加中),
 // 并以 1s 快轮询跟踪, 直到服务端把它列进 /api/games —— 不再干等 30s 慢刷新。
 const pendingIds = new Map(); // id -> 提交时间戳(占位行防呆: 服务重启等异常 3 分钟后自动撤下)
+const nmAutoPopped = new Set(); // t1(作者需求:自动推进): 已自动弹过人名确认模态的 id(防重复弹; stage 离开 names 后重置)
 async function startGame() {
   const id = parseId($("#gameInput").value);
   if (!id) return alert("请输入游戏ID或网址");
@@ -240,10 +281,90 @@ async function pendingRetry(id) {
   await fetch(`/api/start/${id}`, { method: "POST" }).catch(() => {});
   refreshGames();
 }
+// ---- t2(2026-08-29 本地导入): 文件夹(逐文件 raw body, 并发6) / zip(8MB 分片) 上传 ----
+let impState = null; // { iid, id, aborted }
+function impShow() { $("#impModal").classList.remove("hide"); }
+function impClose() { $("#impModal").classList.add("hide"); }
+function impReset() {
+  impState = null;
+  $("#impPick").classList.remove("hide");
+  $("#impProg").classList.add("hide");
+  $("#impCancelBtn").textContent = "取消导入";
+}
+(function () {
+  $("#impDir").addEventListener("change", e => { if (e.target.files.length) impStart([...e.target.files], "folder"); e.target.value = ""; });
+  $("#impZip").addEventListener("change", e => { if (e.target.files.length === 1) impStart([e.target.files[0]], "zip"); e.target.value = ""; });
+})();
+function impUi(pct, status) {
+  $("#impPct").textContent = pct;
+  $("#impBar").style.width = pct;
+  if (status !== undefined) $("#impStatus").textContent = status;
+}
+async function impStart(files, mode) {
+  const rel = f => (f.webkitRelativePath || f.name).replace(/\\/g, "/");
+  const name = mode === "zip"
+    ? files[0].name.replace(/\.zip$/i, "")
+    : ((files[0].webkitRelativePath || files[0].name).split("/")[0] || "本地游戏");
+  $("#impPick").classList.add("hide");
+  $("#impProg").classList.remove("hide");
+  $("#impName").textContent = name;
+  impUi("0%", "连接服务…");
+  const manifest = files.map(f => ({ path: rel(f), size: f.size }));
+  const beg = await fetch(API_BASE + "/api/import/begin", { method: "POST", body: JSON.stringify({ name, mode, files: manifest }) }).then(x => x.json()).catch(() => null);
+  if (!beg || !beg.importId) { $("#impStatus").textContent = "❌ " + (beg && beg.error || "无法开始导入（服务无响应）"); $("#impCancelBtn").textContent = "关闭"; return; }
+  pendingIds.set(beg.id, Date.now());
+  refreshGames();
+  const total = beg.totalBytes || 1;
+  let sent = 0;
+  impState = { iid: beg.importId, id: beg.id, aborted: false };
+  const bump = n => { sent += n; impUi(Math.min(99, Math.round(sent / total * 100)) + "%", `已上传 ${fmtMB(sent)} / ${fmtMB(total)}`); };
+  try {
+    if (mode === "zip") {
+      const f = files[0], CH = 8 * 1024 * 1024;
+      for (let off = 0, seq = 0; off < f.size; off += CH, seq++) {
+        if (impState.aborted) throw new Error("已取消");
+        const blob = f.slice(off, Math.min(f.size, off + CH));
+        const r = await fetch(`${API_BASE}/api/import/zip-chunk?iid=${encodeURIComponent(beg.importId)}&seq=${seq}`, { method: "POST", body: blob }).then(x => x.json()).catch(() => null);
+        if (!r || !r.ok) throw new Error((r && r.error) || "分片上传失败");
+        bump(r.bytes);
+      }
+    } else {
+      const queue = files.slice();
+      await Promise.all(Array.from({ length: 6 }, async () => {
+        while (queue.length) {
+          if (impState.aborted) throw new Error("已取消");
+          const f = queue.shift();
+          const r = await fetch(`${API_BASE}/api/import/file?iid=${encodeURIComponent(beg.importId)}&p=${encodeURIComponent(rel(f))}`, { method: "POST", body: f }).then(x => x.json()).catch(() => null);
+          if (!r || !r.ok) throw new Error((r && r.error) || `上传失败: ${rel(f)}`);
+          bump(r.bytes);
+        }
+      }));
+    }
+    impUi("100%", "服务端处理中（解压 / 识别引擎 / 提取文本）…");
+    const fin = await fetch(API_BASE + "/api/import/finish", { method: "POST", body: JSON.stringify({ importId: beg.importId }) }).then(x => x.json()).catch(() => null);
+    if (!fin || !fin.ok) throw new Error((fin && fin.error) || "完成导入请求失败");
+    impReset();
+    impClose();
+    refreshGames();
+  } catch (e) {
+    $("#impStatus").textContent = "❌ " + e.message + "（请重新导入）";
+    $("#impCancelBtn").textContent = "关闭";
+  }
+}
+function impCancel() {
+  if (impState && impState.iid && !$("#impStatus").textContent.startsWith("❌")) {
+    impState.aborted = true;
+    fetch(API_BASE + "/api/import/cancel", { method: "POST", body: JSON.stringify({ importId: impState.iid }) }).catch(() => {});
+  }
+  impReset();
+  impClose();
+}
 function fmtMB(b) { return (b / 1048576).toFixed(1) + "MB"; }
 function jobPct(j) {
   const p = j.progress || {};
   if (j.stage === "names") return 3;
+  if (p.kind === "import" && p.total) return Math.min(99, Math.round((p.bytes||0) / p.total * 100)); // t2: 本地导入上传
+  if (p.kind === "extract" && p.total) return Math.min(99, Math.round((p.done||0) / p.total * 100)); // t2: zip 解压
   if (p.kind === "download" && p.total) return Math.min(99, Math.round((p.bytes !== undefined ? p.bytes : p.files) / p.total * 100));
   if (p.kind === "translate" && p.total) return Math.round(p.done / p.total * 100);
   if (j.stage === "review") return p.total ? Math.round((p.checked||0) / p.total * 100) : 50;
@@ -253,7 +374,9 @@ function jobPct(j) {
 }
 function jobLabel(j) {
   const p = j.progress || {};
-  if (j.stage === "names") return "自动识别人名…";
+  if (j.stage === "names") return "待处理"; // 2026-08-28 作者裁定: names 停点也显示「待处理」(人名模态已自动弹出, 行内无需重复提示)
+  if (p.kind === "import" && p.total) return `导入上传 ${fmtMB(p.bytes||0)}/${fmtMB(p.total)}`; // t2
+  if (p.kind === "extract" && p.total) return `解压 ${p.done||0}/${p.total}`; // t2
   if (p.kind === "download" && p.total) return p.bytes !== undefined
     ? `下载 ${fmtMB(p.bytes)}/${fmtMB(p.total)}`
     : `下载文本 ${p.files||0}/${p.total}`;
@@ -265,6 +388,28 @@ function jobLabel(j) {
   if (j.stage === "decrypt") return "解密游戏数据…";
   if (j.stage === "translate") return "翻译准备中…";
   return j.stage || "";
+}
+// ---- t1(2026-08-29 缓存进度条): 每行游戏的缓存进度 ----
+// 进行中: j.prefetch(job 通道实时驱动) 流动条纹条 x/N; 静止: /api/games cacheStats(stats.json);
+// 完成: 绿满条 + ✓。有 stats.json 即渲染(t2 导入游戏天生完成态); 在线下载版/Wolf 无 stats.json 不渲染。
+function cacheLineHtml(g, j) {
+  const pf = j && j.prefetch;
+  const cs = g.cacheStats; // t2 导入游戏(type=download/wolf+stats.json)同样渲染——本地资源天生完成态
+  if (pf && pf.running) {
+    const total = pf.total || (cs && cs.totalEst) || 0;
+    const done = pf.done || 0;
+    const pct = total ? Math.min(99, Math.round(done / total * 100)) : 4;
+    return `<div class="cache-line">⚡ 预取中<div class="bar"><div class="run" style="width:${Math.max(4, pct)}%"></div></div><span>${done}/${total} 文件${cs && cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
+  }
+  if (cs && cs.totalEst) {
+    const got = (cs.files || 0) + (cs.misses || 0);
+    const pct = Math.min(100, Math.round(got / cs.totalEst * 100));
+    if (cs.complete || pct >= 100) return `<div class="cache-line"><span style="color:var(--ok)">✓ 缓存完成</span><div class="bar"><div class="full" style="width:100%"></div></div><span title="${cs.misses ? cs.misses + ' 个推测文件不存在(已跳过, 不影响)' : ''}">${cs.files} 文件 · ${fmtMB(cs.bytes || 0)}</span></div>`;
+    return `<div class="cache-line">缓存<div class="bar"><div style="width:${pct}%"></div></div><span>${cs.files}/${cs.totalEst} 文件 · ${pct}%${cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
+  }
+  if (cs && cs.files) return `<div class="cache-line">缓存 ${cs.files} 文件 · ${fmtMB(cs.bytes || 0)}</div>`;
+  if (g.type === "download" || g.type === "wolf") return ""; // 在线下载版/Wolf 本地完整且无 stats.json → 无缓存行
+  return `<div class="cache-line">未预取（进入游戏后自动后台缓存）</div>`;
 }
 async function saveCfg() {
   await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
@@ -288,8 +433,32 @@ async function openGame(id) {
   const r = await fetch(`/api/open/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
   if (!r || !r.ok) window.open(API_BASE + `/play/${id}/`, "_blank");
 }
-async function resume(id) {
-  await fetch(`/api/start/${id}`, { method: "POST" });
+async function resume(id, wantTranslate) {
+  await fetch(`/api/start/${id}${wantTranslate ? "?t=1" : ""}`, { method: "POST" }); // t=1: 作者需求(修正)——翻译仅由「汉化」按钮显式触发
+  refreshGames();
+}
+// ---- t4(汉化包) UI 入口: 作者需求(修正版)三按钮状态机 ----
+// 导出: translations 非空即可分享成果; 导入: 全局入口(zip 内 manifest 定位游戏, 无需选中)
+function l10nExport(id) { window.open((typeof API_BASE !== "undefined" ? API_BASE : "") + `/api/l10n/export/${id}`, "_blank"); }
+let _l10nInput = null;
+function l10nImportPick() {
+  if (!_l10nInput) {
+    _l10nInput = document.createElement("input");
+    _l10nInput.type = "file"; _l10nInput.accept = ".zip"; _l10nInput.style.display = "none";
+    _l10nInput.addEventListener("change", l10nImportUpload);
+    document.body.appendChild(_l10nInput);
+  }
+  _l10nInput.value = ""; _l10nInput.click();
+}
+async function l10nImportUpload() {
+  const f = _l10nInput.files && _l10nInput.files[0];
+  if (!f) return;
+  if (f.size > 64 * 1024 * 1024) return alert("汉化包超过 64MB 上限");
+  const base = typeof API_BASE !== "undefined" ? API_BASE : "";
+  const r = await fetch(base + "/api/l10n/import", { method: "POST", body: await f.arrayBuffer() }).then(x => x.json()).catch(() => null);
+  if (!r) return alert("导入失败（服务无响应）");
+  if (!r.ok) return alert("导入失败: " + (r.error || "未知错误"));
+  alert(`已导入「${r.title || r.gameId}」：新增 ${r.added ?? 0} 条 / 覆盖 ${r.overridden ?? 0} 条${r.warning ? "\n" + r.warning : ""}`);
   refreshGames();
 }
 async function del(id) {
@@ -377,12 +546,14 @@ async function nmSave() {
   const r = await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names }) }).then(x => x.json());
   nmClose();
   if (r.applied) alert(`已确认并全文统一 ${r.applied} 处（游戏内刷新生效）`);
-  else { alert("已确认，翻译继续"); currentId = nmId; resume(nmId); }
+  // 作者需求(自动推进): 翻译由服务端在 POST 后自动续跑——前端不再二次 resume, 避免并发双跑
+  else alert("已确认，翻译继续");
+  refreshGames();
 }
 async function nmSkip() {
   await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names: {} }) });
   nmClose();
-  currentId = nmId; resume(nmId);
+  refreshGames(); // 作者需求(自动推进): 服务端已自动续跑翻译(跳过=交给自动预译)
 }
 
 // ---- review queue ----
@@ -559,47 +730,66 @@ async function refreshGames() {
     if (j && j.stage === "error") continue; // 失败占位保留(显示错误+重试), 由用户处置
     if (Date.now() - (pendingIds.get(pid) || 0) > 180000) pendingIds.delete(pid); // 防呆超时自动撤下
   }
+  // t1(作者需求: 自动推进): 人名停点(stage=names)自动弹确认模态——每游戏每页面会话一次; 手动关闭后可从「人名」按钮重开
+  for (const g of list) {
+    const jn = jobs[g.id];
+    const key = String(g.id);
+    if (jn && jn.stage === "names") {
+      if (!nmAutoPopped.has(key) && $("#nmModal").classList.contains("hide")) { nmAutoPopped.add(key); openNames(g.id); }
+    } else if (nmAutoPopped.has(key)) nmAutoPopped.delete(key);
+  }
   const pend = [...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid));
   const el = $("#games");
   if (!list.length && !pend.length) { el.innerHTML = '<span class="meta">暂无游戏</span>'; }
   else el.innerHTML = pend.map(pid => {
     const j = jobs[pid] || {};
     const err = j.stage === "error";
+    const isLocalImp = String(pid).startsWith("local-"); // t2: 本地导入占位(失败重试无意义, 重新导入即可)
     const line = err ? `❌ ${(j.error || "").slice(0, 60)}` : ((j.log && j.log.length) ? String(j.log[j.log.length - 1]).replace(/^\[[^\]]*\]\s*/, "") : "正在提交…");
     return `<div class="game">
-      <div class="grow"><b>${pid}</b><span class="tag part">${err ? "添加失败" : "⏳ 添加中"}</span><div class="meta">ID ${pid}</div>
+      <div class="grow"><b>${pid}</b><span class="tag part">${err ? (isLocalImp ? "导入失败" : "添加失败") : (isLocalImp ? "⏳ 导入中" : "⏳ 添加中")}</span><div class="meta">ID ${pid}</div>
       <div class="job-line" style="color:${err ? "var(--err)" : "var(--dim)"};font-size:11px">${esc(line)}</div></div>
-      ${err ? `<button class="ghost" onclick="pendingRetry(${pid})">重试</button>` : ""}
-      <button class="ghost" onclick="pendingDrop(${pid})">移除</button>
+      ${(err && !isLocalImp) ? `<button class="ghost" onclick="pendingRetry('${pid}')">重试</button>` : ""}
+      <button class="ghost" onclick="pendingDrop('${pid}')">移除</button>
     </div>`;
   }).join("") + list.map(g => {
     const st = !g.stringsN ? "jp" : g.trN >= g.stringsN ? "cn" : "part";
     const label = st === "cn" ? "已汉化" : st === "part" ? `翻译中 ${g.trN}/${g.stringsN}` : "日文";
-    const typeTag = g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">下载版</span>` : "";
+    // t2(本地导入): 本地游戏显示「本地导入」徽章(freem 下载版徽章仅对 freem 来源显示)
+    const typeTag = g.source === "local"
+      ? `<span class="tag jp" style="background:rgba(62,207,142,.13);color:var(--ok)">本地导入</span>`
+      : (g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">下载版</span>` : "");
     const j = jobs[g.id] || {};
     const jp = jobPct(j);
     const jl = jobLabel(j);
     const jobHtml = (jl && j.stage && j.stage !== "done" && j.stage !== "error")
       ? `<div class="job-line"><div class="bar" style="width:100px;height:5px;display:inline-block;vertical-align:1px"><div style="width:${jp}%;background:var(--acc);height:100%"></div></div> <span style="color:var(--dim);font-size:11px">${jl}</span></div>`
       : (j.stage === "error" ? `<div class="job-line" style="color:var(--err);font-size:11px">❌ ${(j.error||"").slice(0,60)}</div>`
-        : (!j.stage && g.type === "download" && !g.ready ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 点击"续翻"恢复下载</div>` : ""));
+        : (!j.stage && g.type === "download" && !g.ready && g.source !== "local" ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 点击"汉化"恢复下载</div>`
+          : ((!j.stage || j.stage === "done") && g.stringsN > 0 && (g.trN || 0) < g.stringsN ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 待处理 — 点「汉化」开始翻译，或顶部「导入汉化包」直接套用他人译文</div>`
+            : (!j.stage && g.source === "local" && g.importing ? `<div class="job-line" style="color:var(--dim);font-size:11px">等待上传…</div>` : ""))));
+    // t1(UI 直观化): 行内信息分层——标题+状态徽章 / ID·引擎·文本量 / 缓存进度行 / 任务进度行
+    const metaBits = [`ID ${g.id}`];
+    if (g.engine && g.engine !== "unknown") metaBits.push(g.engine);
+    if (g.stringsN) metaBits.push(`文本 ${g.trN}/${g.stringsN}`);
     return `<div class="game">
-      <div class="grow"><b>${g.title || g.id}</b><span class="tag ${st}">${label}</span>${typeTag}<div class="meta">ID ${g.id}</div>${jobHtml}</div>
+      <div class="grow"><b>${g.title || g.id}</b><span class="tag ${st}">${label}</span>${typeTag}<div class="meta">${metaBits.join(" · ")}</div>${cacheLineHtml(g, j)}${jobHtml}</div>
       <div class="acts">
-      ${st !== "cn" ? `<button class="ghost" onclick="resume(${g.id})">续翻</button>` : ""}
-      <button onclick="openGame(${g.id})">▶ 进入</button>
-      <button class="ghost" onclick='openTr(${g.id}, ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>对照表</button>
-      <button class="ghost" onclick="openNames(${g.id})">人名</button>
-      <button class="ghost" onclick="openReview(${g.id})">校对</button>
-      <button class="ghost" onclick="openConsistency(${g.id})">一致</button>
-      <button class="danger" onclick="del(${g.id})">删除</button>
+      ${st !== "cn" ? `<button class="ghost" onclick="resume('${g.id}', true)">${!g.stringsN || !g.trN ? "汉化" : "继续汉化"}</button>` : ""}
+      ${g.trN > 0 ? `<button class="ghost" onclick="l10nExport('${g.id}')">📦 导出汉化包</button>` : ""}
+      <button onclick="openGame('${g.id}')">▶ 进入</button>
+      <button class="ghost" onclick='openTr("${g.id}", ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>对照表</button>
+      <button class="ghost" onclick="openNames('${g.id}')">人名</button>
+      <button class="ghost" onclick="openReview('${g.id}')">校对</button>
+      <button class="ghost" onclick="openConsistency('${g.id}')">一致</button>
+      <button class="danger" onclick="del('${g.id}')">删除</button>
       </div>
     </div>`;
   }).join("");
   } finally {
     refreshingGames = false;
     // 单一定时链(替代旧的 3s 链+30s interval 双轨, 避免链叠加): 占位中 1s / 活动任务 3s / 空闲 30s
-    const active = list.some(g => { const j = jobs[g.id]; return j && j.stage && j.stage !== "done" && j.stage !== "error"; });
+    const active = list.some(g => { const j = jobs[g.id]; return (j && j.stage && j.stage !== "done" && j.stage !== "error") || !!(j && j.prefetch && j.prefetch.running); }); // t1: 预取进行中也保持 3s 快轮询(缓存条实时走动)
     const pendN = [...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid)).length;
     clearTimeout(gamesTimer);
     gamesTimer = setTimeout(refreshGames, pendN ? 1000 : (active ? 3000 : 30000));
