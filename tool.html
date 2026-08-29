@@ -132,6 +132,7 @@
     <div id="nmBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(680px,var(--modal-max));max-height:84vh;display:flex;flex-direction:column;padding:16px">
       <b>人名 / 专有名词确认</b>
       <div class="meta" style="margin:6px 0 10px">机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。</div>
+      <input type="text" id="nmSearch" placeholder="搜索原文/译名…" oninput="nmFilter()" style="margin-bottom:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--fg)">
       <div id="nmList" style="flex:1;overflow:auto"></div>
       <div class="row" style="margin-top:10px">
         <button class="ghost" onclick="nmSave()">✓ 确认并开始翻译</button>
@@ -362,7 +363,7 @@ function impCancel() {
 function fmtMB(b) { return (b / 1048576).toFixed(1) + "MB"; }
 function jobPct(j) {
   const p = j.progress || {};
-  if (j.stage === "names") return 3;
+  if (j.stage === "names") return 100; // t1(人名时机): names 停点移到翻译完成后——翻译已 100%
   if (p.kind === "import" && p.total) return Math.min(99, Math.round((p.bytes||0) / p.total * 100)); // t2: 本地导入上传
   if (p.kind === "extract" && p.total) return Math.min(99, Math.round((p.done||0) / p.total * 100)); // t2: zip 解压
   if (p.kind === "download" && p.total) return Math.min(99, Math.round((p.bytes !== undefined ? p.bytes : p.files) / p.total * 100));
@@ -374,7 +375,7 @@ function jobPct(j) {
 }
 function jobLabel(j) {
   const p = j.progress || {};
-  if (j.stage === "names") return "待处理"; // 2026-08-28 作者裁定: names 停点也显示「待处理」(人名模态已自动弹出, 行内无需重复提示)
+  if (j.stage === "names") return "已译完 · 待确认人名"; // t1(人名时机): 翻译完成后才弹人名确认(names=翻译后停点)
   if (p.kind === "import" && p.total) return `导入上传 ${fmtMB(p.bytes||0)}/${fmtMB(p.total)}`; // t2
   if (p.kind === "extract" && p.total) return `解压 ${p.done||0}/${p.total}`; // t2
   if (p.kind === "download" && p.total) return p.bytes !== undefined
@@ -439,7 +440,12 @@ async function resume(id, wantTranslate) {
 }
 // ---- t4(汉化包) UI 入口: 作者需求(修正版)三按钮状态机 ----
 // 导出: translations 非空即可分享成果; 导入: 全局入口(zip 内 manifest 定位游戏, 无需选中)
-function l10nExport(id) { window.open((typeof API_BASE !== "undefined" ? API_BASE : "") + `/api/l10n/export/${id}`, "_blank"); }
+function l10nExport(id) {
+  // t3(完整汉化包): 确认框选普通/完整——完整包含引擎字典快照+最终对照表状态+本作缓存条目,
+  // 体积更大, 接收方无需本机字典也能完整显示, 可独立分发。
+  const full = confirm("导出【完整汉化包】？\n\n完整包含：引擎字典快照 + 最终对照表状态 + 本作翻译缓存条目，可离线分享直接导入。\n选「取消」= 普通包（仅译文+人名+原文表）。");
+  window.open((typeof API_BASE !== "undefined" ? API_BASE : "") + `/api/l10n/export/${id}${full ? "?full=1" : ""}`, "_blank");
+}
 let _l10nInput = null;
 function l10nImportPick() {
   if (!_l10nInput) {
@@ -455,10 +461,19 @@ async function l10nImportUpload() {
   if (!f) return;
   if (f.size > 64 * 1024 * 1024) return alert("汉化包超过 64MB 上限");
   const base = typeof API_BASE !== "undefined" ? API_BASE : "";
-  const r = await fetch(base + "/api/l10n/import", { method: "POST", body: await f.arrayBuffer() }).then(x => x.json()).catch(() => null);
+  const bytes = await f.arrayBuffer();
+  const post = (q) => fetch(base + "/api/l10n/import" + (q || ""), { method: "POST", body: bytes }).then(x => x.json()).catch(() => null);
+  let r = await post("");
   if (!r) return alert("导入失败（服务无响应）");
+  // t3(指纹三级匹配): partial → 警告确认后只导双方都有的条目
+  if (r.needConfirm === "partial") {
+    const go = confirm(`疑似同游戏不同版本：\n包内 ${r.packStrings} 条 / 本机 ${r.targetStrings} 条文本，核心数据文件 ${r.fileHit}/${r.fileCommon} 一致。\n部分翻译可能不适用。\n\n仍要导入吗？（将只导入双方都存在的条目）`);
+    if (!go) return alert("已取消导入");
+    r = await post("?confirmPartial=1");
+    if (!r) return alert("导入失败（服务无响应）");
+  }
   if (!r.ok) return alert("导入失败: " + (r.error || "未知错误"));
-  alert(`已导入「${r.title || r.gameId}」：新增 ${r.added ?? 0} 条 / 覆盖 ${r.overridden ?? 0} 条${r.warning ? "\n" + r.warning : ""}`);
+  alert(`已导入「${r.title || r.gameId}」：新增 ${r.added ?? 0} 条 / 覆盖 ${r.overridden ?? 0} 条${r.match && r.match !== "exact" && r.match !== "legacy" ? "（部分匹配导入）" : ""}${r.engineAppliedMerged ? "，字典快照补 " + r.engineAppliedMerged + " 条" : ""}`);
   refreshGames();
 }
 async function del(id) {
@@ -537,23 +552,33 @@ async function openNames(id) {
     <span style="width:190px">${esc(c)}</span>
     <input type="text" class="grow nmInput" data-jp="${esc(c)}" value="${esc(confirmed[c] || "")}" placeholder="译名（留空=自动）">
   </div>`).join("");
+  if ($("#nmSearch")) $("#nmSearch").value = ""; // 重开时清空搜索
   $("#nmModal").classList.remove("hide");
 }
 function nmClose() { $("#nmModal").classList.add("hide"); }
+function nmFilter() { // 2026-08-29: 人名搜索——匹配原文或已填译名, 其余行隐藏
+  const q = ($("#nmSearch") || {}).value?.trim().toLowerCase() || "";
+  document.querySelectorAll("#nmList .row").forEach(row => {
+    if (!q) { row.style.display = ""; return; }
+    const jp = (row.querySelector("span")?.textContent || "").toLowerCase();
+    const cn = (row.querySelector("input")?.value || "").toLowerCase();
+    row.style.display = (jp.includes(q) || cn.includes(q)) ? "" : "none";
+  });
+}
 async function nmSave() {
   const names = {};
   document.querySelectorAll(".nmInput").forEach(inp => { if (inp.value.trim()) names[inp.dataset.jp] = inp.value.trim(); });
   const r = await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names }) }).then(x => x.json());
   nmClose();
+  // t1(人名时机): 确认发生在翻译完成后——应用人名=全文统一, 流程收尾 done, 无续跑
   if (r.applied) alert(`已确认并全文统一 ${r.applied} 处（游戏内刷新生效）`);
-  // 作者需求(自动推进): 翻译由服务端在 POST 后自动续跑——前端不再二次 resume, 避免并发双跑
-  else alert("已确认，翻译继续");
+  else alert("已确认人名");
   refreshGames();
 }
 async function nmSkip() {
   await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names: {} }) });
   nmClose();
-  refreshGames(); // 作者需求(自动推进): 服务端已自动续跑翻译(跳过=交给自动预译)
+  refreshGames(); // t1: 跳过=保留自动预译结果并收尾(不再触发翻译——人名确认已在翻译后)
 }
 
 // ---- review queue ----
@@ -709,7 +734,7 @@ async function csCustom(btn) {
   } catch (e) { alert("请求失败: " + e.message); btn.disabled = false; btn.textContent = "按自定义统一"; }
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape") { trClose(); nmClose(); rvClose(); csClose(); } });
-let gamesTimer = null, refreshingGames = false;
+let gamesTimer = null, refreshingGames = false, lastGamesHtml = null; // t1(卡顿): 上次渲染结果, 未变化不重写 DOM
 async function refreshGames() {
   if (refreshingGames) return; // 防重入: 手动刷新/快轮询/慢刷新不叠加并发
   refreshingGames = true;
@@ -730,7 +755,8 @@ async function refreshGames() {
     if (j && j.stage === "error") continue; // 失败占位保留(显示错误+重试), 由用户处置
     if (Date.now() - (pendingIds.get(pid) || 0) > 180000) pendingIds.delete(pid); // 防呆超时自动撤下
   }
-  // t1(作者需求: 自动推进): 人名停点(stage=names)自动弹确认模态——每游戏每页面会话一次; 手动关闭后可从「人名」按钮重开
+  // t1(人名时机定稿): stage=names 现在只会出现在【翻译完成后】(服务端把人名确认停点移到 translateAll 之后)。
+  // 自动弹确认模态——每游戏每页面会话一次; 手动关闭后可从「人名」按钮重开。
   for (const g of list) {
     const jn = jobs[g.id];
     const key = String(g.id);
@@ -740,8 +766,9 @@ async function refreshGames() {
   }
   const pend = [...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid));
   const el = $("#games");
-  if (!list.length && !pend.length) { el.innerHTML = '<span class="meta">暂无游戏</span>'; }
-  else el.innerHTML = pend.map(pid => {
+  // t1(卡顿): 轮询期间内容未变化时跳过整表 innerHTML 重写——避免每次轮询都重建整棵 DOM
+  // (重排/重绘/丢滚动位置), 模态与列表交互不再被周期性打断。
+  const nextHtml = (!list.length && !pend.length) ? '<span class="meta">暂无游戏</span>' : pend.map(pid => {
     const j = jobs[pid] || {};
     const err = j.stage === "error";
     const isLocalImp = String(pid).startsWith("local-"); // t2: 本地导入占位(失败重试无意义, 重新导入即可)
@@ -786,6 +813,7 @@ async function refreshGames() {
       </div>
     </div>`;
   }).join("");
+  if (nextHtml !== lastGamesHtml) { el.innerHTML = nextHtml; lastGamesHtml = nextHtml; }
   } finally {
     refreshingGames = false;
     // 单一定时链(替代旧的 3s 链+30s interval 双轨, 避免链叠加): 占位中 1s / 活动任务 3s / 空闲 30s
