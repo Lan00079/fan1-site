@@ -922,7 +922,16 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
     fetch(API_BASE + "/api/version").then(function (r) { return r.json(); }).then(function (v) {
       if (v && v.update && v.update.available && !sessionStorage.getItem("updDismissed")) {
         document.getElementById("updText").textContent = "发现新版本 v" + String(v.update.version).replace(/^v/i, "") + (v.update.note ? " — " + v.update.note : "") + "（当前 v" + v.current + "）";
-        document.getElementById("updBtn").href = "https://fan1.top/#download"; // 2026-09-03: 官网优先——老版本 exe 的 API 仍返回 GitHub 页, 页面侧统一改指官网下载区
+        document.getElementById("updBtn").href = "https://fan1.top/"; // 2026-09-03: 官网优先(作者定稿: 主站根, 不带锚点)——老版本 exe 的 API 仍返回 GitHub 页, 页面侧统一改指官网
+        // 2026-09-03: 点击转交系统默认浏览器(exe 经 /api/open 唤起)——app 专用窗口内下载体验差;
+        // 老版本 exe 无此路由(fetch 404/失败)自动退回本窗口打开, 行为不变。
+        document.getElementById("updBtn").onclick = function (e) {
+          e.preventDefault();
+          var _u = this.href;
+          fetch(API_BASE + "/api/open?url=" + encodeURIComponent(_u))
+            .then(function (r) { if (!r.ok) window.open(_u, "_blank"); })
+            .catch(function () { window.open(_u, "_blank"); });
+        };
         bar.classList.remove("hide");
       } else {
         bar.classList.add("hide");
