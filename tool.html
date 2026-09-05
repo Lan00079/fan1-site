@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<script>(function(s){s.dataset.zone='11664343',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <title>freem 汉化</title>
 <meta name="robots" content="noindex">
 <style>
@@ -838,7 +837,6 @@ async function refreshGames() {
   refreshGames();
 })();
 </script>
-<!-- Monetag vignette ad (zone 11663937): injected at end of body; old 3-slot banner bar removed 2026-08-18 -->
 <script>
 // console window = service lifetime. Closing it ends the tool (and running games).
 let consoleClosing = false;
@@ -882,27 +880,26 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 
 
 
-<!-- 双侧广告列（2026-08-27 定稿）：Adsterra 160x600 纵向 banner ×2，内容居中，左右对称不遮挡 -->
-<div id="adColL" style="position:fixed;top:50%;left:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
-  <iframe id="adColLFr" scrolling="no" style="width:160px;height:600px;border:0;display:block" title="ad"></iframe>
-</div>
-<div id="adColR" style="position:fixed;top:50%;right:0;transform:translateY(-50%);width:160px;height:600px;z-index:2147483646">
-  <iframe id="adColRFr" scrolling="no" style="width:160px;height:600px;border:0;display:block" title="ad"></iframe>
+<!-- 底部广告（2026-09-05 定稿）：撤两侧 Adsterra 160x600 立柱，改 HilltopAds MultiTag Banner 300x250 ×2 底部并排（中间 100px, slot 0/1 独立计次） -->
+<style>body { padding-bottom: 260px !important; }</style>
+<div id="adBottom" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:700px;height:250px;z-index:2147483646;display:flex;gap:100px">
+  <iframe id="adBotFr0" scrolling="no" style="width:300px;height:250px;border:0;display:block;flex:0 0 300px" title="ad"></iframe>
+  <iframe id="adBotFr1" scrolling="no" style="width:300px;height:250px;border:0;display:block;flex:0 0 300px" title="ad"></iframe>
 </div>
 <script>
 (function () {
-  var fl = document.getElementById("adColLFr");
-  var fr = document.getElementById("adColRFr");
-  // 2026-08-28 定稿(经官方文档核实): Adsterra 发布商条款/help center 无 banner 自动刷新禁令
-  // (对照 Monetag 有明文禁止)。按作者裁定恢复轮换, 周期 10 分钟——远离高频刷展示红线,
-  // 单会话(10-30min)可得 1-3 次展示。
+  var f0 = document.getElementById("adBotFr0");
+  var f1 = document.getElementById("adBotFr1");
+  // 2026-09-05 条款核查: HilltopAds T&C/拒量清单(publishers-help 9071516)无 banner 自动刷新禁令,
+  // 沿用轮换(2026-09-05 作者裁定 10min→60min, 展示质量优先)。MultiTag Banner 官方默认捆绑 Popup,
+  // 实测载荷按请求条件下发; 广告点击由 window.open 收容钩子捕获, 不会接管应用窗口。
   function refresh() {
     var b = Date.now();
-    fl.src = "/adframe?slot=0&bust=L" + b;   // 左列: 当前 zone
-    fr.src = "/adframe?slot=1&bust=R" + b;   // 右列: 第二单元(未配置时返回空文档, 不报错)
+    f0.src = "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
+    f1.src = "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
   }
   refresh();
-  setInterval(refresh, 10 * 60 * 1000); // 10 分钟轮换
+  setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
 })();
 </script>
 
