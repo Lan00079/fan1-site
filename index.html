@@ -179,40 +179,40 @@ l.parentNode.insertBefore(s, l);
         本站与 freem.ne.jp 无关联；游戏版权归原作者所有，译文仅供学习交流
     </footer>
 
-    <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-05 作者指定）：有填充才显示, 静音自动播(浏览器策略), 播完 8s 自动接下一条(循环); 空壳/失败自隐藏并 60s 后续试; 窄屏隐藏 -->
+    <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-05 作者指定）：有填充才显示, 静音自动播, 同一条循环重播(loop), 10 分钟后才拉新广告; 空壳/失败自隐藏并 5min 后温和重试; 窄屏隐藏 -->
     <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:9998;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
-        <video id="vastV" muted playsinline controls style="width:100%;display:block"></video>
+        <video id="vastV" muted playsinline controls loop style="width:100%;display:block"></video>
     </div>
     <style>@media (max-width: 1250px) { #vastBox { display: none !important; } }</style>
     <script>
 (function () {
     var VAST_URL = "https://funny-tooth.com/d.maFxzqdiGVN-v/ZlGuUl/peumj9NuaZxUBlSkqP/TTcQz/OmD_Yo4INlTcMvttN/zHM/4QNnj/gX1fNDwj";
     var box = document.getElementById("vastBox"), v = document.getElementById("vastV");
-    function hide(retryMs) { box.style.display = "none"; try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} if (retryMs) setTimeout(load, retryMs); }   // 无货/失败也自续, 不会断链
+    function hide(retryMs) { box.style.display = "none"; try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} if (retryMs) setTimeout(load, retryMs); }   // 无货/失败也温和自续, 不会断链
     function fire(u) { try { new Image().src = u.replace(/\[CACHEBUST\]/g, String(Math.random())); } catch (e) {} }
     function tags(doc, t) { return Array.prototype.slice.call(doc.getElementsByTagName(t)).map(function (n) { return (n.textContent || "").trim(); }).filter(Boolean); }
     function load() {
         fetch(VAST_URL, { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (xml) {
             var doc = new DOMParser().parseFromString(xml, "text/xml");
-            if (doc.getElementsByTagName("parsererror").length) { hide(60000); return; }
+            if (doc.getElementsByTagName("parsererror").length) { hide(300000); return; }
             var ad = doc.getElementsByTagName("Ad")[0];
-            if (!ad) { hide(60000); return; }                   // 空壳 VAST = 本次无填充 → 静默, 60s 后再试
+            if (!ad) { hide(300000); return; }                  // 空壳 VAST = 本次无填充 → 静默, 5min 后温和再试
             var mf = null, mfn = doc.getElementsByTagName("MediaFile");
             for (var i = 0; i < mfn.length && !mf; i++) {
                 var u = (mfn[i].textContent || "").trim(), ty = mfn[i].getAttribute("type") || "";
                 if (/mp4|video/i.test(ty) || /\.mp4(\?|$)/i.test(u)) mf = u;
             }
-            if (!mf) { hide(60000); return; }
+            if (!mf) { hide(300000); return; }
             var imps = tags(doc, "Impression"), cts = tags(doc, "ClickThrough"), errUrl = tags(doc, "Error")[0] || "";
             var fired = false;
-            v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };   // 真实开播才计曝光
-            v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); hide(60000); };
-            v.onended = function () { setTimeout(load, 8000); };                                // 播完 → 8s 后接下一条(循环播放)
+            v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };   // 真实开播才计曝光(循环重播不重复计)
+            v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); hide(300000); };
             v.onclick = function () { cts.forEach(fire); if (cts[0]) window.open(cts[0], "_blank", "noopener"); };
-            v.src = mf;
+            v.src = mf;                                          // loop 属性已在标签上 → 同一条自动重播, 不拉新
             box.style.display = "block";
-            v.play().catch(function () {});                     // 被拦则留封面手动点, 点击后仍会进入循环
-        }).catch(function () { hide(60000); });
+            v.play().catch(function () {});                     // 被拦则留封面手动点
+            setTimeout(load, 10 * 60 * 1000);                   // 10 分钟后才拉下一条新广告
+        }).catch(function () { hide(300000); });
     }
     load();
 })();
