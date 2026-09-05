@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAST 3.0 测试 - fan1</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background:#f5f5f5; margin:0; padding:24px; }
+  .box { max-width:720px; margin:0 auto; background:#fff; border-radius:8px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  h1 { font-size:20px; color:#2c3e50; }
+  video { width:100%; background:#000; display:block; }
+  #log { background:#111418; color:#9fd6a0; font:12px/1.6 Consolas,monospace; padding:12px; border-radius:6px; min-height:80px; white-space:pre-wrap; word-break:break-all; margin-top:16px; }
+  button { background:#2c7fd9; color:#fff; border:none; border-radius:6px; padding:10px 22px; font-size:14px; cursor:pointer; margin:12px 8px 0 0; }
+  button.sec { background:#8f9bab; }
+  a.back { color:#2c7fd9; font-size:13px; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>HilltopAds Video: VAST 3.0 — 播放器联调测试页</h1>
+  <p style="color:#666;font-size:13px">无依赖原生实现：fetch VAST → DOMParser 解析 MediaFile/Impression/ClickThrough/Error → &lt;video&gt; 播放贴片。CORS 已实测回显 Access-Control-Allow-Origin: https://fan1.top。</p>
+  <video id="v" controls playsinline></video>
+  <div>
+    <button id="btnPlay">加载并播放广告</button>
+    <button id="btnAgain" class="sec">重新拉取 VAST</button>
+  </div>
+  <div id="log">等待操作…</div>
+  <p><a class="back" href="index.html">← 返回首页</a></p>
+</div>
+<script>
+(function () {
+  var VAST_URL = "https://funny-tooth.com/d.maFxzqdiGVN-v/ZlGuUl/peumj9NuaZxUBlSkqP/TTcQz/OmD_Yo4INlTcMvttN/zHM/4QNnj/gX1fNDwj";
+  var v = document.getElementById("v"), logEl = document.getElementById("log");
+  function log(s) { logEl.textContent += "\n[" + new Date().toLocaleTimeString() + "] " + s; console.log(s); }
+  function fire(urls) { (urls || []).forEach(function (u) { try { new Image().src = u.replace(/\[CACHEBUST\]/g, String(Math.random())); } catch (e) {} }); }
+  function q(parent, tag) { return Array.prototype.slice.call(parent.getElementsByTagName(tag)); }
+  function txt(n) { return n && n.textContent ? n.textContent.trim() : ""; }
+
+  function parseAndPlay(xml) {
+    var doc = new DOMParser().parseFromString(xml, "text/xml");
+    if (doc.getElementsByTagName("parsererror").length) { log("❌ XML 解析失败"); return; }
+    var ad = doc.getElementsByTagName("Ad")[0];
+    if (!ad) { log("⚠️ 空壳 VAST（无 <Ad>）—— 本次请求无填充"); return; }
+    log("✅ Ad id=" + ad.getAttribute("id") + " | AdSystem=" + (txt(q(ad, "AdSystem")[0]) || "?"));
+    var imps = q(ad, "Impression").map(txt).filter(Boolean);
+    var errUrl = txt(q(ad, "Error")[0]);
+    var mfs = q(ad, "MediaFile");
+    var pick = null;
+    mfs.forEach(function (m) {
+      var t = txt(m), type = m.getAttribute("type") || "", dlv = +(m.getAttribute("delivery") || 0);
+      log("  MediaFile type=" + type + " w=" + (m.getAttribute("width") || "?") + " h=" + (m.getAttribute("height") || "?") + " delivery=" + (m.getAttribute("delivery") || "?"));
+      if (!pick && /mp4|video/i.test(type)) pick = t;
+    });
+    if (!pick) { log("❌ 无可用 mp4 MediaFile"); if (errUrl) fire([errUrl.replace("[ERRORCODE]", "901")]); return; }
+    var ct = q(ad, "ClickTracking").concat(q(ad, "ClickThrough")).map(txt).filter(Boolean);
+    log("▶ 播放: " + pick.slice(0, 90) + "…");
+    v.src = pick;
+    var once = false;
+    v.onplaying = function () { if (!once) { once = true; log("📊 触发 Impression x" + imps.length); fire(imps); } };
+    v.onerror = function () { log("❌ 视频加载失败 code=" + (v.error && v.error.code)); if (errUrl) fire([errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))]); };
+    v.onended = function () { log("⏹ 播放结束"); };
+    v.onclick = function () { if (ct.length) { log("🖱 点击跟踪+跳转"); fire(ct); } };
+    v.play().then(function () { log("▶ 开始播放（自动播成功）"); }).catch(function (e) { log("⏸ 自动播被拦(" + e.name + ")，点视频中央手动播"); });
+  }
+
+  function fetchVast(auto) {
+    logEl.textContent = "拉取 VAST…";
+    fetch(VAST_URL, { cache: "no-store" })
+      .then(function (r) { log("HTTP " + r.status + " | CORS OK"); return r.text(); })
+      .then(function (xml) { log("VAST 长度 " + xml.length + "B"); parseAndPlay(xml); })
+      .catch(function (e) { log("❌ fetch 失败: " + e.message + "（若为 CORS 报错说明 Origin 校验变化）"); });
+  }
+  document.getElementById("btnPlay").onclick = function () { fetchVast(true); };
+  document.getElementById("btnAgain").onclick = function () { fetchVast(false); };
+})();
+</script>
+</body>
+</html>
