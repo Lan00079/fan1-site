@@ -49,7 +49,7 @@
     var mfs = q(ad, "MediaFile");
     var pick = null;
     mfs.forEach(function (m) {
-      var t = txt(m), type = m.getAttribute("type") || "", dlv = +(m.getAttribute("delivery") || 0);
+      var t = txt(m), type = m.getAttribute("type") || "";
       log("  MediaFile type=" + type + " w=" + (m.getAttribute("width") || "?") + " h=" + (m.getAttribute("height") || "?") + " delivery=" + (m.getAttribute("delivery") || "?"));
       if (!pick && /mp4|video/i.test(type)) pick = t;
     });
