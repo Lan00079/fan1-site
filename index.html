@@ -50,6 +50,9 @@ l.parentNode.insertBefore(s, l);
         .btn-dl:hover { transform: translateY(-2px); background: #c0392b; }
         .dl-meta { color: #888; font-size: .85em; margin-top: 12px; }
         .ad-slot { text-align: center; margin: 22px auto; min-height: 90px; }
+        .ad-row { display: flex; justify-content: center; gap: 12px; margin: 22px auto; }
+        .ad-cell { width: 300px; min-height: 250px; }
+        @media (max-width: 980px) { .ad-row { flex-wrap: wrap; } }
         .feat { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
         .feat .f { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 20px; }
         .feat .f b { color: #2c3e50; display: block; margin-bottom: 6px; }
@@ -105,8 +108,10 @@ l.parentNode.insertBefore(s, l);
         </div>
 
         <!-- HilltopAds banner 300x250（2026-09-05 替换 Monetag） -->
-        <div class="ad-slot" style="min-height:250px">
-            <script>
+        <!-- HilltopAds banner 300x250 ×3 横排（2026-09-05）：网站 zone bbXiV + 软件同款 X_V(左)/byXmV(右) -->
+        <div class="ad-row">
+            <div class="ad-cell">
+                <script>
 (function(abp){
 var d = document,
     s = d.createElement('script'),
@@ -117,12 +122,10 @@ s.async = true;
 s.referrerPolicy = 'no-referrer-when-downgrade';
 l.parentNode.insertBefore(s, l);
 })({})
-            </script>
-        </div>
-
-        <!-- HilltopAds banner 300x250 · 软件同款 zone（slot 0 复用, 与工具底部左列同一投放位） -->
-        <div class="ad-slot" style="min-height:250px">
-            <script>
+                </script>
+            </div>
+            <div class="ad-cell">
+                <script>
 (function(jnbi){
 var d = document,
     s = d.createElement('script'),
@@ -133,7 +136,22 @@ s.async = true;
 s.referrerPolicy = 'no-referrer-when-downgrade';
 l.parentNode.insertBefore(s, l);
 })({})
-            </script>
+                </script>
+            </div>
+            <div class="ad-cell">
+                <script>
+(function(tfxd){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = tfxd || {};
+s.src = "\/\/prizefamily.com\/byXmV.sNdIG\/lV0tYiWwc-\/ve\/md9\/uBZbUAl-k\/PTT\/c\/zvOCDcYT0ONvTsctt-Nyz\/Mo4DN\/j\/Q\/2AMnQt";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+                </script>
+            </div>
         </div>
 
         <div class="card">
@@ -160,6 +178,45 @@ l.parentNode.insertBefore(s, l);
         fan1.top · fan1 汉化工具官方网站 · <a href="privacy.html">隐私政策</a><br>
         本站与 freem.ne.jp 无关联；游戏版权归原作者所有，译文仅供学习交流
     </footer>
+
+    <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-05 作者指定）：有填充才显示, 静音自动播(浏览器策略), 空壳/失败自隐藏并 30min 后重试; 窄屏隐藏 -->
+    <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:9998;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
+        <video id="vastV" muted playsinline controls style="width:100%;display:block"></video>
+    </div>
+    <style>@media (max-width: 1250px) { #vastBox { display: none !important; } }</style>
+    <script>
+(function () {
+    var VAST_URL = "https://funny-tooth.com/d.maFxzqdiGVN-v/ZlGuUl/peumj9NuaZxUBlSkqP/TTcQz/OmD_Yo4INlTcMvttN/zHM/4QNnj/gX1fNDwj";
+    var box = document.getElementById("vastBox"), v = document.getElementById("vastV");
+    function hide() { box.style.display = "none"; try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} }
+    function fire(u) { try { new Image().src = u.replace(/\[CACHEBUST\]/g, String(Math.random())); } catch (e) {} }
+    function tags(doc, t) { return Array.prototype.slice.call(doc.getElementsByTagName(t)).map(function (n) { return (n.textContent || "").trim(); }).filter(Boolean); }
+    function load() {
+        fetch(VAST_URL, { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (xml) {
+            var doc = new DOMParser().parseFromString(xml, "text/xml");
+            if (doc.getElementsByTagName("parsererror").length) { hide(); return; }
+            var ad = doc.getElementsByTagName("Ad")[0];
+            if (!ad) { hide(); return; }                       // 空壳 VAST = 本次无填充 → 静默
+            var mf = null, mfn = doc.getElementsByTagName("MediaFile");
+            for (var i = 0; i < mfn.length && !mf; i++) {
+                var u = (mfn[i].textContent || "").trim(), ty = mfn[i].getAttribute("type") || "";
+                if (/mp4|video/i.test(ty) || /\.mp4(\?|$)/i.test(u)) mf = u;
+            }
+            if (!mf) { hide(); return; }
+            var imps = tags(doc, "Impression"), cts = tags(doc, "ClickThrough"), errUrl = tags(doc, "Error")[0] || "";
+            var fired = false;
+            v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };   // 真实开播才计曝光
+            v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); hide(); };
+            v.onclick = function () { cts.forEach(fire); if (cts[0]) window.open(cts[0], "_blank", "noopener"); };
+            v.src = mf;
+            box.style.display = "block";
+            v.play().catch(function () {});                     // 被拦则留封面手动点
+        }).catch(hide);
+    }
+    load();
+    setInterval(load, 30 * 60 * 1000);
+})();
+    </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
 </body>
 </html>
