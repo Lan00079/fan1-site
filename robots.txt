@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 屏蔽下载/会员下载等动态端点(与 freem robots 一致思路), 静态站其实无此类路径, 留作防御性声明
+Disallow: /dl/
+
+Sitemap: https://fan1.top/sitemap.xml
