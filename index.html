@@ -31,39 +31,7 @@ s.referrerPolicy = 'no-referrer-when-downgrade';
 l.parentNode.insertBefore(s, l);
 })({})
     </script>
-    <!-- HilltopAds Video Slider（2026-09-05）：悬浮视频条，贴角/静音自动播/可收起 -->
-    <script>
-(function(ffh){
-var d = document,
-    s = d.createElement('script'),
-    l = d.scripts[d.scripts.length - 1];
-s.settings = ffh || {};
-s.src = "\/\/prizefamily.com\/bpXCV\/sqd.GGlO0pYGWbcO\/LeMmL9BuIZ\/UNlQklPBTJcvzDOrD\/YI2iMNTScWtoN_zRM\/4mNTjAYVygMoQX";
-s.async = true;
-s.referrerPolicy = 'no-referrer-when-downgrade';
-l.parentNode.insertBefore(s, l);
-})({})
-    </script>
-    <script>
-        // HilltopAds Video Slider 停靠左下角（2026-09-05 作者指定；t1 审计修正）：
-        // 停靠外壳是 #随机id 的 fixed 元素（bottom:0; left:100%; .started 后 translateX(-100%)），
-        // .rmp-container 只是内层播放器——钉外壳而非内层。仅呈现层，不改广告代码与计费链路。
-        (function () {
-            function pinSliderLeft() {
-                document.querySelectorAll("body > div[id]").forEach(function (el) {
-                    if (!el.querySelector || !el.querySelector(".rmp-container")) return;
-                    if (getComputedStyle(el).position !== "fixed") return;
-                    if (el.style.left !== "0px" || el.style.transform !== "none") {
-                        el.style.left = "0px";
-                        el.style.right = "auto";
-                        el.style.transform = "none";
-                    }
-                });
-            }
-            new MutationObserver(pinSliderLeft).observe(document.body, { childList: true });
-            setInterval(pinSliderLeft, 1500);
-        })();
-    </script>
+    <!-- HilltopAds Video Slider(bpXCV) 与左下角钉壳脚本已于 2026-09-05 移除：CN 桌面填充≈0(空壳VAST), 每页 185KB 引擎加载纯成本。视频类试验改道 vast-test.html(VAST 3.0 zone 人工采样)。 -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; line-height: 1.8; color: #333; background: #f5f5f5; }
