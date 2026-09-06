@@ -9,36 +9,16 @@
     <link rel="dns-prefetch" href="//prizefamily.com">
     <link rel="dns-prefetch" href="//funny-tooth.com">
     <script>
-    /* 2026-09-06 广告点击保护 v2(t4 B3/B4 方案, CDP 实证引擎 autobind 挂 window capture):
-       必须是 head 内第一个脚本(注册顺序=执行顺序, 先于一切广告脚本)。
-       ① window.open 包装: 视频区(#vastBox)点击后 150ms 内拦截引擎弹窗(修复"点视频弹出无关内容"),
-          白名单放行 VAST ClickThrough(计费保留); 视频区外的点击照常弹窗(popunder 收入不受损)。
-       ② MutationObserver: 引擎透明覆盖层(z>=2147483000)设 pointer-events:none → banner 点击落回
-          iframe 正常跳转(跨域不冒泡 → 不触发弹窗), 修复"banner 被透明层盖住点不动"。 */
+    /* 2026-09-06: 引擎透明覆盖层中和器 —— 保护三 banner 可点。
+       实测(t4 CDP): popunder autobind 挂 window capture, 页面级拦截无效;
+       改为对引擎透明覆盖层(z>=2147483000)设 pointer-events:none, 点击落回 iframe 正常跳转。
+       注: window.open 包装器已随 VAST 播放器隔离(移入独立 iframe vast-frame.html)一并撤除 ——
+       iframe 事件不跨文档, 播放器与 popunder 零交互; popunder 收入路径完整恢复。 */
     (function () {
-        var origOpen = window.open ? window.open.bind(window) : null;
-        var lastZoneClick = 0, allowCT = false;
-        window.__fan1AllowCT = function () { allowCT = true; };
-        if (origOpen) {
-            window.open = function (u, name, spec) {
-                if (allowCT) { allowCT = false; return origOpen(u, name, spec); }
-                if (Date.now() - lastZoneClick < 150) return null;   // 视频区点击 → 拦截引擎弹窗
-                return origOpen(u, name, spec);
-            };
-        }
-        function markZone(e) {
-            try {
-                var inZone = e.target && e.target.closest && e.target.closest("#vastBox");
-                lastZoneClick = inZone ? Date.now() : 0;   // 区域外点击立即清窗, 只拦视频区后的第一发
-            } catch (err) {}
-        }
-        ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
-            window.addEventListener(t, markZone, true);
-        });
         function neutralize() {
             try {
                 document.querySelectorAll("div").forEach(function (el) {
-                    if (el.closest("#vastBox")) return;
+                    if (el.closest("#vastFrame")) return;
                     var z = parseInt(el.style && el.style.zIndex || "0", 10);
                     if (z >= 2147483000 && el.style.pointerEvents !== "none") el.style.pointerEvents = "none";
                 });
@@ -257,50 +237,27 @@ l.parentNode.insertBefore(s, l);
 })({})
     </script>
 
-    <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-05 作者指定）：有填充才显示, 静音自动播, 同一条循环重播(loop), 10 分钟后才拉新广告; 空壳/失败自隐藏并 5min 后温和重试; 窄屏隐藏 -->
-    <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:2147483000;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
-        <video id="vastV" muted playsinline controls loop style="width:100%;display:block"></video>
-    </div>
-    <!-- 2026-09-06: 原 vastBox 捕获拦截已移除(t4 B4 实证: capture stopPropagation 截掉 target 相位,
-         视频控件/ClickThrough 全死且拦不住 window capture 的引擎弹窗) —— 改由 head 内前置守卫统一处理 -->
-    <style>@media (max-width: 1250px) { #vastBox { display: none !important; } }</style>
+    <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-06 隔离版, 作者指定）：
+         播放器移入独立 iframe(vast-frame.html) —— 独立文档/独立全局, 与页面 popunder 引擎零共享,
+         点击/弹窗/全局变量互不影响(事件不跨文档); 新 VAST 代码(dDm) 隔离测试。
+         播放器自身行为: 有填充才现身(postMessage), 静音自动播+同条循环, 10 分钟拉新, 空壳 5min 温和重试; 窄屏隐藏 -->
+    <iframe id="vastFrame" src="vast-frame.html" title="ad" allow="autoplay; encrypted-media"
+            style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:344px;height:300px;border:0;z-index:9998"></iframe>
+    <style>@media (max-width: 1250px) { #vastFrame { display: none !important; } }</style>
     <script>
-(function () {
-    var VAST_URL = "https://funny-tooth.com/d.maFxzqdiGVN-v/ZlGuUl/peumj9NuaZxUBlSkqP/TTcQz/OmD_Yo4INlTcMvttN/zHM/4QNnj/gX1fNDwj";
-    var box = document.getElementById("vastBox"), v = document.getElementById("vastV");
-    function hide(retryMs) { box.style.display = "none"; try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} if (retryMs) setTimeout(load, retryMs); }   // 无货/失败也温和自续, 不会断链
-    function fire(u) { try { new Image().src = u.replace(/\[CACHEBUST\]/g, String(Math.random())); } catch (e) {} }
-    function tags(doc, t) { return Array.prototype.slice.call(doc.getElementsByTagName(t)).map(function (n) { return (n.textContent || "").trim(); }).filter(Boolean); }
-    function load() {
-        fetch(VAST_URL, { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (xml) {
-            var doc = new DOMParser().parseFromString(xml, "text/xml");
-            if (doc.getElementsByTagName("parsererror").length) { hide(300000); return; }
-            var ad = doc.getElementsByTagName("Ad")[0];
-            if (!ad) { hide(300000); return; }                  // 空壳 VAST = 本次无填充 → 静默, 5min 后温和再试
-            var mf = null, mfn = doc.getElementsByTagName("MediaFile");
-            for (var i = 0; i < mfn.length && !mf; i++) {
-                var u = (mfn[i].textContent || "").trim(), ty = mfn[i].getAttribute("type") || "";
-                if (/mp4|video/i.test(ty) || /\.mp4(\?|$)/i.test(u)) mf = u;
-            }
-            if (!mf) { hide(300000); return; }
-            var imps = tags(doc, "Impression"), cts = tags(doc, "ClickThrough"), errUrl = tags(doc, "Error")[0] || "";
-            var fired = false;
-            v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };   // 真实开播才计曝光(循环重播不重复计)
-            v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); hide(300000); };
-            v.onclick = function () { cts.forEach(fire); if (cts[0]) { if (window.__fan1AllowCT) window.__fan1AllowCT(); window.open(cts[0], "_blank", "noopener"); } };
-            v.src = mf;                                          // loop 属性已在标签上 → 同一条自动重播, 不拉新
-            box.style.display = "block";
-            v.play().catch(function () {});                     // 被拦则留封面手动点
-            setTimeout(load, 10 * 60 * 1000);                   // 10 分钟后才拉下一条新广告
-        }).catch(function () { hide(300000); });
-    }
-    load();
-})();
+    window.addEventListener("message", function (e) {
+        if (!e.data || e.data.source !== "fan1-vast") return;
+        var f = document.getElementById("vastFrame");
+        if (!f) return;
+        if (e.data.event === "filled") f.style.display = "block";
+        if (e.data.event === "empty") f.style.display = "none";
+    });
     </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+
 <script src="i18n.js"></script>
-<!-- 2026-09-06 Option B: 保护三 banner 点击不被 popunder 透明层劫持(点 banner=正常跳广告页, 不弹窗) -->
-<script src="banner-guard.js"></script>
+<!-- 2026-09-06: banner-guard.js 已移除 —— 其职能由 head 内"引擎透明覆盖层中和器"(pointer-events:none)取代,
+     且 VAST 播放器已隔离进独立 iframe, 无需事件级拦截 -->
 <script>document.addEventListener("DOMContentLoaded",applySiteI18n);</script>
 </body>
 </html>

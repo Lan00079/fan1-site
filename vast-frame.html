@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<title>ad</title>
+<style>
+  html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+  video { width:100%; display:block; background:#000; border-radius:8px; }
+</style>
+</head>
+<body>
+<video id="v" muted playsinline loop controls style="display:none"></video>
+<script>
+/* HilltopAds VAST 3.0 隔离播放器(2026-09-06): 独立 iframe 文档, 与父页面脚本零共享——
+   popunder 的 window 级监听/透明层/弹窗逻辑均无法进入本文档(事件不跨文档)。
+   行为: 有填充 → 显示并静音自动播(同条循环); 10 分钟拉新; 空壳/失败 → 通知父页隐藏, 5min 温和重试。 */
+(function () {
+    var VAST_URL = "https://funny-tooth.com/dDm/FAz.diGVNSvZZAGLUR/he/mq9yuwZDUBlmkhPiT_clzVOdDvYc4/NoTnMEtPNfzRMs4QNsj/gm1wNMyVZdsqaVW/1dpRdtDm0Sxa";
+    var v = document.getElementById("v");
+    function tell(ev) { try { parent.postMessage({ source: "fan1-vast", event: ev }, "*"); } catch (e) {} }
+    function fire(u) { try { new Image().src = u.replace(/\[CACHEBUST\]/g, String(Math.random())); } catch (e) {} }
+    function tags(doc, t) { return Array.prototype.slice.call(doc.getElementsByTagName(t)).map(function (n) { return (n.textContent || "").trim(); }).filter(Boolean); }
+    function empty() { v.style.display = "none"; try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {} tell("empty"); }
+    function load() {
+        fetch(VAST_URL, { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (xml) {
+            var doc = new DOMParser().parseFromString(xml, "text/xml");
+            if (doc.getElementsByTagName("parsererror").length) { empty(); schedule(300000); return; }
+            var ad = doc.getElementsByTagName("Ad")[0];
+            if (!ad) { empty(); schedule(300000); return; }
+            var mf = null, mfn = doc.getElementsByTagName("MediaFile");
+            for (var i = 0; i < mfn.length && !mf; i++) {
+                var u = (mfn[i].textContent || "").trim(), ty = mfn[i].getAttribute("type") || "";
+                if (/mp4|video/i.test(ty) || /\.mp4(\?|$)/i.test(u)) mf = u;
+            }
+            if (!mf) { empty(); schedule(300000); return; }
+            var imps = tags(doc, "Impression"), cts = tags(doc, "ClickThrough"), errUrl = tags(doc, "Error")[0] || "";
+            var fired = false;
+            v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };
+            v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); empty(); schedule(300000); };
+            v.onclick = function () { cts.forEach(fire); if (cts[0]) window.open(cts[0], "_blank", "noopener"); };
+            v.onended = function () { };   // loop 属性自动重播同一条
+            v.src = mf;
+            v.style.display = "block";
+            tell("filled");
+            v.play().catch(function () {});
+            setTimeout(load, 10 * 60 * 1000);   // 10 分钟后拉新(作者定稿: 同条循环, 10min 才换)
+        }).catch(function () { empty(); schedule(300000); });
+    }
+    function schedule(ms) { setTimeout(load, ms); }
+    load();
+})();
+</script>
+</body>
+</html>
