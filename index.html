@@ -27,7 +27,10 @@
             };
         }
         function markZone(e) {
-            try { if (e.target && e.target.closest && e.target.closest("#vastBox")) lastZoneClick = Date.now(); } catch (err) {}
+            try {
+                var inZone = e.target && e.target.closest && e.target.closest("#vastBox");
+                lastZoneClick = inZone ? Date.now() : 0;   // 区域外点击立即清窗, 只拦视频区后的第一发
+            } catch (err) {}
         }
         ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
             window.addEventListener(t, markZone, true);
