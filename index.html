@@ -242,7 +242,7 @@ l.parentNode.insertBefore(s, l);
          点击/弹窗/全局变量互不影响(事件不跨文档); 新 VAST 代码(dDm) 隔离测试。
          播放器自身行为: 有填充才现身(postMessage), 静音自动播+同条循环, 10 分钟拉新, 空壳 5min 温和重试; 窄屏隐藏 -->
     <iframe id="vastFrame" src="vast-frame.html" title="ad" allow="autoplay; encrypted-media"
-            style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:344px;height:300px;border:0;z-index:9998"></iframe>
+            style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:344px;height:300px;border:0;z-index:2147483648"></iframe>
     <style>@media (max-width: 1250px) { #vastFrame { display: none !important; } }</style>
     <script>
     window.addEventListener("message", function (e) {
