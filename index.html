@@ -44,7 +44,7 @@
         footer a { color: #fff; }
     </style>
 </head>
-<body data-i18n-page="index">
+<body data-i18n-page="page">
     <header>
         <h1 data-i18n="heroTitle">fan1 汉化工具</h1>
         <p data-i18n="heroSub">日本 freem 网页游戏 · 一键中文化 · 下载即用</p>
@@ -228,7 +228,7 @@ l.parentNode.insertBefore(s, l);
         var box = document.getElementById("vastBox");
         if (!box) return;
         ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
-            box.addEventListener(t, function (e) { e.stopPropagation(); }, true);
+            box.addEventListener(t, function (e) { e.stopPropagation(); }, false);
         });
     })();
     </script>

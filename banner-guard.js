@@ -8,7 +8,7 @@
         var els = document.querySelectorAll(sel);
         els.forEach(function (el) {
             ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
-                el.addEventListener(t, function (e) { e.stopPropagation(); }, true);
+                el.addEventListener(t, function (e) { e.stopPropagation(); }, false);
             });
         });
     }
@@ -21,6 +21,5 @@
     } else {
         protectAll();
     }
-    // 引擎每 3s 重挂透明层 → 我们也周期性重挂拦截(便宜且稳)
-    setInterval(protectAll, 3000);
+    // 2026-09-06 BUG-13 修复: 移除 3s 重挂(容器静态, 监听一次即可; 原实现每小时每元素累积约 1.9 万监听)
 })();

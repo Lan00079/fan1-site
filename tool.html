@@ -218,7 +218,7 @@
       <button class="ghost" onclick="l10nImportPick()" data-i18n="btnL10nImport">📦 导入汉化包</button>
       <button class="ghost" onclick="impShow()" data-i18n="btnImpLocal">📥 导入本地游戏</button>
     </div>
-    <div id="games" data-i18n="gamesLoading">加载中…</div>
+    <div id="games">加载中…</div><!-- 2026-09-06 修复: 此容器为动态列表, 不得挂 data-i18n(否则切换语言时已渲染的列表被覆盖成"加载中") -->
   </div>
 
   <!-- t2(2026-08-29 本地导入): 导入本地游戏弹层 -->
@@ -673,6 +673,8 @@ function applyI18n() {
 async function toggleLang() {
   LANG = LANG === "zh" ? "en" : "zh";
   applyI18n();
+  // 2026-09-06 修复: 切换语言后重渲染游戏库(否则列表停留旧语言/加载态)
+  if (typeof refreshGames === "function") refreshGames().catch(function () {});
   try { await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({ uiLang: LANG }) }); } catch {}
 }
 async function onTargetLangChange(sel) {
@@ -1292,7 +1294,7 @@ let consoleClosing = false;
 window.addEventListener("beforeunload", e => {
   if (consoleClosing) return; // user already confirmed exit — let it close silently
   e.preventDefault();
-  e.returnValue = "关闭窗口将退出 freem 汉化（正在游玩的游戏也会关闭）。要继续请点击“留在本页”，或将窗口最小化。";
+  e.returnValue = T("beforeUnloadMsg");
   return e.returnValue;
 });
 // real close (user confirmed): notify service to stop — sendBeacon survives unload
