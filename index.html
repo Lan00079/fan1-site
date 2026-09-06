@@ -8,6 +8,45 @@
     <link rel="preconnect" href="https://funny-tooth.com">
     <link rel="dns-prefetch" href="//prizefamily.com">
     <link rel="dns-prefetch" href="//funny-tooth.com">
+    <script>
+    /* 2026-09-06 广告点击保护 v2(t4 B3/B4 方案, CDP 实证引擎 autobind 挂 window capture):
+       必须是 head 内第一个脚本(注册顺序=执行顺序, 先于一切广告脚本)。
+       ① window.open 包装: 视频区(#vastBox)点击后 150ms 内拦截引擎弹窗(修复"点视频弹出无关内容"),
+          白名单放行 VAST ClickThrough(计费保留); 视频区外的点击照常弹窗(popunder 收入不受损)。
+       ② MutationObserver: 引擎透明覆盖层(z>=2147483000)设 pointer-events:none → banner 点击落回
+          iframe 正常跳转(跨域不冒泡 → 不触发弹窗), 修复"banner 被透明层盖住点不动"。 */
+    (function () {
+        var origOpen = window.open ? window.open.bind(window) : null;
+        var lastZoneClick = 0, allowCT = false;
+        window.__fan1AllowCT = function () { allowCT = true; };
+        if (origOpen) {
+            window.open = function (u, name, spec) {
+                if (allowCT) { allowCT = false; return origOpen(u, name, spec); }
+                if (Date.now() - lastZoneClick < 150) return null;   // 视频区点击 → 拦截引擎弹窗
+                return origOpen(u, name, spec);
+            };
+        }
+        function markZone(e) {
+            try { if (e.target && e.target.closest && e.target.closest("#vastBox")) lastZoneClick = Date.now(); } catch (err) {}
+        }
+        ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
+            window.addEventListener(t, markZone, true);
+        });
+        function neutralize() {
+            try {
+                document.querySelectorAll("div").forEach(function (el) {
+                    if (el.closest("#vastBox")) return;
+                    var z = parseInt(el.style && el.style.zIndex || "0", 10);
+                    if (z >= 2147483000 && el.style.pointerEvents !== "none") el.style.pointerEvents = "none";
+                });
+            } catch (err) {}
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+            neutralize();
+            new MutationObserver(neutralize).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+        });
+    })();
+    </script>
     <title>fan1 汉化工具 - 日本网页游戏一键中文化下载</title>
     <meta name="description" content="fan1 汉化工具：日本 freem 网页游戏一键汉化，RPG Maker MV/MZ 与 Wolf RPG 引擎支持，内置 AI 翻译与人工校对，下载即用。">
     <!-- HilltopAds：Popunder + In-Page 脚本置于 </body> 前（官方要求）；banner ×3 在中部。待办: 让客户经理把 In-Page zone 设为仅页内格式(关捆绑 Popup)。 -->
@@ -219,19 +258,8 @@ l.parentNode.insertBefore(s, l);
     <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:2147483000;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
         <video id="vastV" muted playsinline controls loop style="width:100%;display:block"></video>
     </div>
-    <script>
-    // 2026-09-06 修复: popunder 引擎(runIframeWrappers)会给页面 iframe 盖 z-index 2147483647 的透明点击层,
-    // 且 autobind 在 document 上捕获一切点击——视频第一次点击必然触发弹窗。此处:
-    // (a) 捕获阶段拦截 #vastBox 内所有 click 的冒泡, 保证点视频=播视频, 不触发 popunder;
-    // (b) z-index 提到引擎透明层之下但足够高, 视频区域不被 banner 透明层误盖。
-    (function () {
-        var box = document.getElementById("vastBox");
-        if (!box) return;
-        ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
-            box.addEventListener(t, function (e) { e.stopPropagation(); }, false);
-        });
-    })();
-    </script>
+    <!-- 2026-09-06: 原 vastBox 捕获拦截已移除(t4 B4 实证: capture stopPropagation 截掉 target 相位,
+         视频控件/ClickThrough 全死且拦不住 window capture 的引擎弹窗) —— 改由 head 内前置守卫统一处理 -->
     <style>@media (max-width: 1250px) { #vastBox { display: none !important; } }</style>
     <script>
 (function () {
@@ -256,7 +284,7 @@ l.parentNode.insertBefore(s, l);
             var fired = false;
             v.onplaying = function () { if (!fired) { fired = true; imps.forEach(fire); } };   // 真实开播才计曝光(循环重播不重复计)
             v.onerror = function () { if (errUrl) fire(errUrl.replace("[ERRORCODE]", String(v.error ? v.error.code : 900))); hide(300000); };
-            v.onclick = function () { cts.forEach(fire); if (cts[0]) window.open(cts[0], "_blank", "noopener"); };
+            v.onclick = function () { cts.forEach(fire); if (cts[0]) { if (window.__fan1AllowCT) window.__fan1AllowCT(); window.open(cts[0], "_blank", "noopener"); } };
             v.src = mf;                                          // loop 属性已在标签上 → 同一条自动重播, 不拉新
             box.style.display = "block";
             v.play().catch(function () {});                     // 被拦则留封面手动点
