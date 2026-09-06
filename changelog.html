@@ -21,12 +21,13 @@
   #empty { color:#888; }
 </style>
 </head>
-<body>
+<body data-i18n-page="cl">
+<div style="position:fixed;top:12px;right:16px;z-index:100"><a href="javascript:void(0)" id="langToggleBtn" onclick="toggleSiteLang()" style="background:#2c3e50;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:.9em">EN</a></div>
 <div class="wrap">
-  <h1>更新日志</h1>
-  <div class="meta">fan1.top · fan1 汉化工具 · 新汉化与新功能会在这里第一时间公布</div>
-  <div id="list"><p id="empty">加载中…</p></div>
-  <p style="margin-top:24px"><a class="back" href="index.html">← 返回首页</a></p>
+  <h1 data-i18n="clH1">更新日志</h1>
+  <div class="meta" data-i18n="clMeta">fan1.top · fan1 汉化工具 · 新汉化与新功能会在这里第一时间公布</div>
+  <div id="list"><p id="empty" data-i18n="clLoading">加载中…</p></div>
+  <p style="margin-top:24px"><a class="back" href="index.html" data-i18n="backHome">← 返回首页</a></p>
 </div>
 <script>
 (function () {
@@ -49,5 +50,7 @@
         .catch(function () { document.getElementById("list").innerHTML = '<p id="empty">更新记录加载失败，请稍后重试。</p>'; });
 })();
 </script>
+<script src="i18n.js"></script>
+<script>document.addEventListener("DOMContentLoaded",applySiteI18n);</script>
 </body>
 </html>

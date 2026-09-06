@@ -17,35 +17,38 @@
   a { color:#2c7fd9; }
 </style>
 </head>
-<body>
+<body data-i18n-page="priv">
+<div style="position:fixed;top:12px;right:16px;z-index:100"><a href="javascript:void(0)" id="langToggleBtn" onclick="toggleSiteLang()" style="background:#2c3e50;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:.9em">EN</a></div>
 <div class="wrap">
-  <h1>隐私政策</h1>
-  <div class="meta">fan1.top · fan1 汉化工具 · 更新于 2026-09</div>
+  <h1 data-i18n="privH1">隐私政策</h1>
+  <div class="meta" data-i18n="privMeta">fan1.top · fan1 汉化工具 · 更新于 2026-09</div>
 
-  <h2>工具本地运行</h2>
-  <p>fan1 汉化工具完全在您的电脑上本地运行，不收集、不上传任何个人信息。</p>
+  <h2 data-i18n="privLocalH2">工具本地运行</h2>
+  <p data-i18n="privLocalP">fan1 汉化工具完全在您的电脑上本地运行，不收集、不上传任何个人信息。</p>
   <ul>
-    <li>您的翻译接口配置（API 地址/密钥）仅保存在本机 exe 同目录的 games 文件夹，不经过我们的服务器。</li>
-    <li>游戏数据、缓存与译文全部保存在本地，删除 games 文件夹即彻底清除。</li>
+    <li data-i18n="privLocalLi1">您的翻译接口配置（API 地址/密钥）仅保存在本机 exe 同目录的 games 文件夹，不经过我们的服务器。</li>
+    <li data-i18n="privLocalLi2">游戏数据、缓存与译文全部保存在本地，删除 games 文件夹即彻底清除。</li>
   </ul>
 
-  <h2>本网站（fan1.top）</h2>
+  <h2 data-i18n="privSiteH2">本网站（fan1.top）</h2>
   <ul>
-    <li>本站为静态页面（GitHub Pages），不设用户账号、不设登录、不收集表单信息。</li>
-    <li>本站接入第三方广告服务（HilltopAds），它们可能通过 Cookie 采集访问数据用于广告投放，详见服务商隐私政策。您可通过浏览器设置管理或清除 Cookie。</li>
+    <li data-i18n="privSiteLi1">本站为静态页面（GitHub Pages），不设用户账号、不设登录、不收集表单信息。</li>
+    <li data-i18n="privSiteLi2">本站接入第三方广告服务（HilltopAds），它们可能通过 Cookie 采集访问数据用于广告投放，详见服务商隐私政策。您可通过浏览器设置管理或清除 Cookie。</li>
   </ul>
 
-  <h2>工具的网络行为</h2>
+  <h2 data-i18n="privNetH2">工具的网络行为</h2>
   <ul>
-    <li>下载游戏资源时连接 freem.ne.jp 及其 CDN（fgamearchives.com / fplay.xyz）。</li>
-    <li>启动时的版本检查仅访问 GitHub Releases 读取最新版本号，不含任何个人标识。</li>
-    <li>工具内广告（如启用）由第三方广告服务商按其政策处理。</li>
+    <li data-i18n="privNetLi1">下载游戏资源时连接 freem.ne.jp 及其 CDN（fgamearchives.com / fplay.xyz）。</li>
+    <li data-i18n="privNetLi2">启动时的版本检查仅访问 GitHub Releases 读取最新版本号，不含任何个人标识。</li>
+    <li data-i18n="privNetLi3">工具内广告（如启用）由第三方广告服务商按其政策处理。</li>
   </ul>
 
-  <h2>联系方式</h2>
-  <p>对本政策有疑问可通过 GitHub 仓库 issue 联系。</p>
+  <h2 data-i18n="privContactH2">联系方式</h2>
+  <p data-i18n="privContactP">对本政策有疑问可通过 GitHub 仓库 issue 联系。</p>
 
-  <p style="margin-top:36px"><a href="index.html">← 返回首页</a></p>
+  <p style="margin-top:36px"><a href="index.html" data-i18n="backHome">← 返回首页</a></p>
 </div>
+<script src="i18n.js"></script>
+<script>document.addEventListener("DOMContentLoaded",applySiteI18n);</script>
 </body>
 </html>

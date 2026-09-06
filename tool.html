@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer-when-downgrade">
 <title>freem 汉化</title>
 <meta name="robots" content="noindex">
 <style>
@@ -83,45 +84,56 @@
   <div class="hero">
     <div class="logo">🎮</div>
     <div class="t">
-      <h1>freem 汉化</h1>
-      <div class="sub">日本 freem 网页游戏 · 一键中文化</div>
+      <h1 data-i18n="heroTitle">freem 汉化</h1>
+      <div class="sub" data-i18n="heroSub">日本 freem 网页游戏 · 一键中文化</div>
     </div>
-    <button class="ghost" onclick="shutdown()">⏻ 退出程序</button>
+    <div style="display:flex;gap:8px">
+      <button class="ghost" id="langToggleBtn" onclick="toggleLang()">🌐 EN</button>
+      <button class="ghost" onclick="shutdown()" data-i18n="btnShutdown">⏻ 退出程序</button>
+    </div>
   </div>
 
   <div class="card">
     <div class="row">
-      <input type="text" id="gameInput" class="grow" placeholder="游戏ID 或 网址（如 35127）">
-      <button class="big" onclick="startGame()">🚀 启动 / 添加游戏</button>
+      <input type="text" id="gameInput" class="grow" data-i18n="phGameInput" placeholder="游戏ID 或 网址（如 35127）">
+      <button class="big" onclick="startGame()" data-i18n="btnStartGame">🚀 启动 / 添加游戏</button>
     </div>
     <div id="startHint" class="meta" style="margin-top:6px"></div>
   </div>
 
   <div class="card">
-    <b>翻译接口</b>
+    <b data-i18n="secApi">翻译接口</b>
     <div class="row" style="margin-top:8px">
-      <input type="text" id="endpoint" class="grow" placeholder="API Endpoint（如 https://api.xx.com/v1）">
-      <input type="text" id="model" style="width:150px" placeholder="模型名">
+      <input type="text" id="endpoint" class="grow" data-i18n="phEndpoint" placeholder="API Endpoint（如 https://api.xx.com/v1）">
+      <input type="text" id="model" style="width:150px" data-i18n="phModel" placeholder="模型名">
       <input type="password" id="apiKey" class="grow" placeholder="API Key">
-      <button class="ghost" onclick="saveCfg()">保存</button>
-      <button class="ghost" onclick="toggleNet(true)">网络与下载 ▼</button>
+      <button class="ghost" onclick="saveCfg()" data-i18n="btnSave">保存</button>
+      <button class="ghost" onclick="toggleNet(true)" data-i18n="btnNetToggle">网络与下载 ▼</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <span class="meta">并发数</span>
+      <span class="meta" data-i18n="lblConc">并发数</span>
       <input type="number" id="trConc" min="1" max="16" style="width:64px" value="8">
-      <span class="meta">每批条数</span>
-      <input type="number" id="trBatch" min="1" max="800" style="width:64px" value="12" title="每批发给 LLM 的条数，上限 800。大批量吞吐高（适合缓存回收/强模型）；小批量更稳（弱模型 JSON 不易出格，出错重试代价小）。本地 Ollama 建议 12-30。">
-      <span class="meta">翻译风格</span>
+      <span class="meta" data-i18n="lblBatch">每批条数</span>
+      <input type="number" id="trBatch" min="1" max="800" style="width:64px" value="12">
+      <span class="meta" data-i18n="lblStyle">翻译风格</span>
       <select id="trStyle" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
-        <option value="faithful">严苛忠实</option>
-        <option value="balanced" selected>均衡自然</option>
-        <option value="playful">生动有趣</option>
+        <option value="faithful" data-i18n-opt="optFaithful">严苛忠实</option>
+        <option value="balanced" selected data-i18n-opt="optBalanced">均衡自然</option>
+        <option value="playful" data-i18n-opt="optPlayful">生动有趣</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="meta" data-i18n="lblTargetLang">翻译目标语言</span>
+      <select id="targetLangSel" onchange="onTargetLangChange(this)" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
+        <option value="zh-CN" data-i18n-opt="optZhCN">简体中文</option>
+        <option value="zh-TW" data-i18n-opt="optZhTW">繁體中文</option>
+        <option value="en" data-i18n-opt="optEn">English</option>
       </select>
     </div>
     <div class="row" style="margin-top:8px">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--dim);font-size:13px">
         <input type="checkbox" id="autoReview" style="width:15px;height:15px;accent-color:var(--acc)">
-        翻译完成后自动 AI 校对（默认关闭——校对/一致性按需从游戏库手动运行）
+        <span data-i18n="lblAutoReview">翻译完成后自动 AI 校对（默认关闭——校对/一致性按需从游戏库手动运行）</span>
       </label>
     </div>
   </div>
@@ -129,15 +141,15 @@
   <!-- name confirmation modal -->
   <div id="nmModal" class="hide">
     <div id="nmBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(680px,var(--modal-max));max-height:84vh;display:flex;flex-direction:column;padding:16px">
-      <b>人名 / 专有名词确认</b>
-      <div class="meta" style="margin:6px 0 10px">机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。</div>
-      <input type="text" id="nmSearch" placeholder="搜索原文/译名…" oninput="nmFilter()" style="margin-bottom:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--fg)">
+      <b data-i18n="nmTitle">人名 / 专有名词确认</b>
+      <div class="meta" style="margin:6px 0 10px" data-i18n="nmDesc">机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。</div>
+      <input type="text" id="nmSearch" data-i18n="phNmSearch" placeholder="搜索原文/译名…" oninput="nmFilter()" style="margin-bottom:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--fg)">
       <div id="nmList" style="flex:1;overflow:auto"></div>
       <div class="row" style="margin-top:10px">
-        <button class="ghost" onclick="nmSave()">✓ 确认并开始翻译</button>
-        <button class="ghost" onclick="nmSkip()">全部交给自动（跳过）</button>
+        <button class="ghost" onclick="nmSave()" data-i18n="btnNmConfirm">✓ 确认并开始翻译</button>
+        <button class="ghost" onclick="nmSkip()" data-i18n="btnNmSkip">全部交给自动（跳过）</button>
         <span class="grow"></span>
-        <button onclick="nmClose()">关闭</button>
+        <button onclick="nmClose()" data-i18n="btnClose">关闭</button>
       </div>
     </div>
   </div>
@@ -146,13 +158,13 @@
   <div id="rvModal" class="hide">
     <div id="rvBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:var(--modal-max);height:86vh;display:flex;flex-direction:column;padding:16px">
       <div class="row">
-        <b>AI 校对队列</b>
+        <b data-i18n="rvTitle">AI 校对队列</b>
         <span class="meta" id="rvInfo"></span>
         <span class="grow"></span>
-        <button class="ghost" onclick="rvRun()">重新校对</button>
-        <button onclick="rvClose()">关闭</button>
+        <button class="ghost" onclick="rvRun()" data-i18n="btnRvRun">重新校对</button>
+        <button onclick="rvClose()" data-i18n="btnClose">关闭</button>
       </div>
-      <div class="meta" style="margin:6px 0">AI 质检标记的疑似问题（语义偏差/丢梗/漏译）。三栏对照，一键裁决；裁决立即生效。</div>
+      <div class="meta" style="margin:6px 0" data-i18n="rvDesc">AI 质检标记的疑似问题（语义偏差/丢梗/漏译）。三栏对照，一键裁决；裁决立即生效。</div>
       <div id="rvList" style="flex:1;overflow:auto"></div>
     </div>
   </div>
@@ -161,66 +173,66 @@
   <div id="csModal" class="hide">
     <div id="csBox" style="background:var(--card);border:1px solid var(--line);border-radius:12px;width:var(--modal-max);height:84vh;display:flex;flex-direction:column;padding:16px">
       <div class="row">
-        <b>一致性统一</b>
-        <span class="meta" id="csInfo">扫描中…</span>
+        <b data-i18n="csTitle">一致性统一</b>
+        <span class="meta" id="csInfo" data-i18n="csScanning">扫描中…</span>
         <span class="grow"></span>
-        <button onclick="csClose()">关闭</button>
+        <button onclick="csClose()" data-i18n="btnClose">关闭</button>
       </div>
-      <div class="meta" style="margin:6px 0">同一日文词出现多种译法的条目。AI 已给出建议统一版，可直接采纳、改用其他译法或跳过。</div>
+      <div class="meta" style="margin:6px 0" data-i18n="csDesc">同一日文词出现多种译法的条目。AI 已给出建议统一版，可直接采纳、改用其他译法或跳过。</div>
       <div id="csList" style="flex:1;overflow:auto"></div>
     </div>
   </div>
 
   <div class="card" id="netCard" style="display:none">
     <div class="row">
-      <b>网络与下载</b>
+      <b data-i18n="secNetwork">网络与下载</b>
       <span class="grow"></span>
-      <button class="ghost" onclick="toggleNet(false)">收起 ▲</button>
+      <button class="ghost" onclick="toggleNet(false)" data-i18n="btnNetCollapse">收起 ▲</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <span class="meta">下载线程</span>
+      <span class="meta" data-i18n="lblDlThreads">下载线程</span>
       <input type="number" id="dlThreads" min="1" max="16" style="width:64px" value="6" title="zip 下载并发分片数(默认 6, 单镜像>4并发会被限流); 三镜像择速+断点续传自动生效">
-      <span class="meta">预取</span>
-      <select id="prefetch" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px" title="启动游戏时后台并行拉取全部资源到本地缓存; 二次启动零等待">
-        <option value="on">开启（推荐）</option>
-        <option value="off">关闭</option>
+      <span class="meta" data-i18n="lblPrefetch">预取</span>
+      <select id="prefetch" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
+        <option value="on" data-i18n-opt="optPrefetchOn">开启（推荐）</option>
+        <option value="off" data-i18n-opt="optPrefetchOff">关闭</option>
       </select>
-      <span class="meta">出网口</span>
-      <select id="dlBind" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px" title="下载/回源绑定物理网卡直连(绕过 VPN TUN); 走代理时忽略">
-        <option value="default">系统默认</option>
-        <option value="direct">直连（绕VPN）</option>
+      <span class="meta" data-i18n="lblBind">出网口</span>
+      <select id="dlBind" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
+        <option value="default" data-i18n-opt="optBindDefault">系统默认</option>
+        <option value="direct" data-i18n-opt="optBindDirect">直连（绕VPN）</option>
       </select>
     </div>
     <div class="row" style="margin-top:8px">
-      <span class="meta">代理</span>
-      <input type="text" id="dlProxy" class="grow" placeholder="http://host:port 或 socks5://host:port（留空=直连）">
-      <button class="ghost" onclick="saveNet()">保存网络设置</button>
+      <span class="meta" data-i18n="lblProxy">代理</span>
+      <input type="text" id="dlProxy" class="grow" data-i18n="phProxy" placeholder="http://host:port 或 socks5://host:port（留空=直连）">
+      <button class="ghost" onclick="saveNet()" data-i18n="btnSaveNet">保存网络设置</button>
     </div>
-    <div class="meta" style="margin-top:6px">下载加速(多线程+三镜像)与启动预取默认开启; 此处仅调整细节。预取不阻塞游玩, 已缓存项自动跳过。</div>
+    <div class="meta" style="margin-top:6px" data-i18n="netDesc">下载加速(多线程+三镜像)与启动预取默认开启; 此处仅调整细节。预取不阻塞游玩, 已缓存项自动跳过。</div>
   </div>
 
   <div class="card">
     <div class="row" style="margin-bottom:10px">
-      <b style="font-size:15px">游戏库</b>
+      <b style="font-size:15px" data-i18n="secGames">游戏库</b>
       <span class="grow"></span>
-      <button class="ghost" onclick="l10nImportPick()">📦 导入汉化包</button>
-      <button class="ghost" onclick="impShow()">📥 导入本地游戏</button>
+      <button class="ghost" onclick="l10nImportPick()" data-i18n="btnL10nImport">📦 导入汉化包</button>
+      <button class="ghost" onclick="impShow()" data-i18n="btnImpLocal">📥 导入本地游戏</button>
     </div>
-    <div id="games">加载中…</div>
+    <div id="games" data-i18n="gamesLoading">加载中…</div>
   </div>
 
   <!-- t2(2026-08-29 本地导入): 导入本地游戏弹层 -->
   <div id="impModal" class="hide">
     <div id="impBox">
       <div class="row">
-        <b>📥 导入本地游戏</b>
+        <b data-i18n="impTitle">📥 导入本地游戏</b>
         <span class="grow"></span>
-        <button class="ghost" onclick="impClose()">关闭</button>
+        <button class="ghost" onclick="impClose()" data-i18n="btnClose">关闭</button>
       </div>
-      <div class="meta" style="margin-top:6px">支持 RPG Maker MV/MZ 与 Wolf RPG 的本地游戏——选择游戏文件夹或 zip 压缩包，导入后自动识别引擎并进入既有「提取 → 翻译 → 游玩」流程。同名重复导入会覆盖更新。</div>
+      <div class="meta" style="margin-top:6px" data-i18n="impDesc">支持 RPG Maker MV/MZ 与 Wolf RPG 的本地游戏——选择游戏文件夹或 zip 压缩包，导入后自动识别引擎并进入既有「提取 → 翻译 → 游玩」流程。同名重复导入会覆盖更新。</div>
       <div class="row" id="impPick" style="margin-top:14px">
-        <button onclick="document.querySelector('#impDir').click()">📂 选择游戏文件夹</button>
-        <button onclick="document.querySelector('#impZip').click()">🗜 选择 zip 压缩包</button>
+        <button onclick="document.querySelector('#impDir').click()" data-i18n="btnImpFolder">📂 选择游戏文件夹</button>
+        <button onclick="document.querySelector('#impZip').click()" data-i18n="btnImpZip">🗜 选择 zip 压缩包</button>
       </div>
       <input type="file" id="impDir" webkitdirectory multiple class="hide">
       <input type="file" id="impZip" accept=".zip" class="hide">
@@ -228,7 +240,7 @@
         <div class="row"><b id="impName"></b><span class="grow"></span><span class="meta" id="impPct"></span></div>
         <div class="bar gen" style="width:100%;height:6px;margin-top:6px"><div id="impBar" style="width:0%"></div></div>
         <div class="meta" id="impStatus" style="margin-top:6px"></div>
-        <div class="row" style="margin-top:10px"><button class="ghost" id="impCancelBtn" onclick="impCancel()">取消导入</button></div>
+        <div class="row" style="margin-top:10px"><button class="ghost" id="impCancelBtn" onclick="impCancel()" data-i18n="btnImpCancel">取消导入</button></div>
       </div>
     </div>
   </div>
@@ -236,15 +248,15 @@
   <div id="trModal" class="hide">
     <div id="trBox">
       <div class="row">
-        <b id="trTitle">翻译对照表</b>
-        <input type="text" id="trSearch" class="grow" placeholder="搜索原文或译文…（回车）">
-        <label class="meta"><input type="checkbox" id="trUntr"> 只看未翻译</label>
-        <button class="ghost" onclick="trPage(-1)">‹ 上一页</button>
+        <b id="trTitle" data-i18n="trTitle">翻译对照表</b>
+        <input type="text" id="trSearch" class="grow" data-i18n="phTrSearch" placeholder="搜索原文或译文…（回车）">
+        <label class="meta"><input type="checkbox" id="trUntr"> <span data-i18n="lblTrUntr">只看未翻译</span></label>
+        <button class="ghost" onclick="trPage(-1)" data-i18n="btnPrevPage">‹ 上一页</button>
         <span class="meta" id="trInfo"></span>
-        <button class="ghost" onclick="trPage(1)">下一页 ›</button>
-        <button onclick="trClose()">关闭</button>
+        <button class="ghost" onclick="trPage(1)" data-i18n="btnNextPage">下一页 ›</button>
+        <button onclick="trClose()" data-i18n="btnClose">关闭</button>
       </div>
-      <div class="meta" style="margin-top:6px">未翻译的行输入框为空，可直接手填并"保存"。编辑后游戏内刷新页面即生效。</div>
+      <div class="meta" style="margin-top:6px" data-i18n="trDesc">未翻译的行输入框为空，可直接手填并"保存"。编辑后游戏内刷新页面即生效。</div>
       <div id="trTable"></div>
     </div>
   </div>
@@ -253,6 +265,421 @@
 const API_BASE = "https://fan1.top:" + (window.__FORCE_PORT__ || new URLSearchParams(location.search).get("port") || (location.port || "443"));
 </script>
 <script>
+// ===== i18n system =====
+const I18N = {
+  zh: {
+    pageTitle: "freem 汉化",
+    heroTitle: "freem 汉化",
+    heroSub: "日本 freem 网页游戏 · 一键中文化",
+    btnShutdown: "⏻ 退出程序",
+    btnLangToggle: "🌐 EN",
+    phGameInput: "游戏ID 或 网址（如 35127）",
+    btnStartGame: "🚀 启动 / 添加游戏",
+    secApi: "翻译接口",
+    phEndpoint: "API Endpoint（如 https://api.xx.com/v1）",
+    phModel: "模型名",
+    btnSave: "保存",
+    btnNetToggle: "网络与下载 ▼",
+    lblConc: "并发数",
+    lblBatch: "每批条数",
+    lblStyle: "翻译风格",
+    optFaithful: "严苛忠实",
+    optBalanced: "均衡自然",
+    optPlayful: "生动有趣",
+    lblAutoReview: "翻译完成后自动 AI 校对（默认关闭——校对/一致性按需从游戏库手动运行）",
+    lblTargetLang: "翻译目标语言",
+    optZhCN: "简体中文",
+    optZhTW: "繁體中文",
+    optEn: "English",
+    nmTitle: "人名 / 专有名词确认",
+    nmDesc: "机翻前先定死这些词的译法（谐音梗建议：音译姓氏+短梗词）。留空 = 交给自动。确认后开始翻译。",
+    phNmSearch: "搜索原文/译名…",
+    btnNmConfirm: "✓ 确认并开始翻译",
+    btnNmSkip: "全部交给自动（跳过）",
+    btnClose: "关闭",
+    rvTitle: "AI 校对队列",
+    btnRvRun: "重新校对",
+    rvDesc: "AI 质检标记的疑似问题（语义偏差/丢梗/漏译）。三栏对照，一键裁决；裁决立即生效。",
+    csTitle: "一致性统一",
+    csScanning: "扫描中…",
+    csDesc: "同一日文词出现多种译法的条目。AI 已给出建议统一版，可直接采纳、改用其他译法或跳过。",
+    secNetwork: "网络与下载",
+    btnNetCollapse: "收起 ▲",
+    lblDlThreads: "下载线程",
+    lblPrefetch: "预取",
+    optPrefetchOn: "开启（推荐）",
+    optPrefetchOff: "关闭",
+    lblBind: "出网口",
+    optBindDefault: "系统默认",
+    optBindDirect: "直连（绕VPN）",
+    lblProxy: "代理",
+    phProxy: "http://host:port 或 socks5://host:port（留空=直连）",
+    btnSaveNet: "保存网络设置",
+    netDesc: "下载加速(多线程+三镜像)与启动预取默认开启; 此处仅调整细节。预取不阻塞游玩, 已缓存项自动跳过。",
+    secGames: "游戏库",
+    btnL10nImport: "📦 导入汉化包",
+    btnImpLocal: "📥 导入本地游戏",
+    gamesLoading: "加载中…",
+    impTitle: "📥 导入本地游戏",
+    impDesc: "支持 RPG Maker MV/MZ 与 Wolf RPG 的本地游戏——选择游戏文件夹或 zip 压缩包，导入后自动识别引擎并进入既有「提取 → 翻译 → 游玩」流程。同名重复导入会覆盖更新。",
+    btnImpFolder: "📂 选择游戏文件夹",
+    btnImpZip: "🗜 选择 zip 压缩包",
+    btnImpCancel: "取消导入",
+    trTitle: "翻译对照表",
+    phTrSearch: "搜索原文或译文…（回车）",
+    lblTrUntr: "只看未翻译",
+    btnPrevPage: "‹ 上一页",
+    btnNextPage: "下一页 ›",
+    trDesc: "未翻译的行输入框为空，可直接手填并「保存」。编辑后游戏内刷新页面即生效。",
+    msgWebGameParsing: "识别为网页游戏链接，正在解析仓库…",
+    msgSubmitFail: "提交失败（服务无响应），请重试",
+    msgWebGameAdded: "已添加网页游戏 {name}，下载与汉化在游戏库中实时显示",
+    alertNoGameId: "请输入游戏ID或网址",
+    msgSubmitted: "已提交 {id}，进度在下方游戏库中实时显示",
+    msgConnecting: "连接服务…",
+    msgUploaded: "已上传 {sent} / {total}",
+    msgServerProcessing: "服务端处理中（解压 / 识别引擎 / 提取文本）…",
+    msgImportFailPrefix: "❌ {msg}（请重新导入）",
+    msgCannotStartImport: "无法开始导入（服务无响应）",
+    msgChunkFail: "分片上传失败",
+    msgUploadFail: "上传失败: {path}",
+    msgFinishFail: "完成导入请求失败",
+    msgCancelled: "已取消",
+    jlNames: "已译完 · 待确认人名",
+    jlImport: "导入上传 {done}/{total}",
+    jlExtract: "解压 {done}/{total}",
+    jlDownloadBytes: "下载 {done}/{total}",
+    jlDownloadFiles: "下载文本 {done}/{total}",
+    jlTranslate: "翻译 {done}/{total}",
+    jlReview: "校对 {done}/{total}",
+    jlDone: "✅ 完成",
+    jlIdentify: "识别游戏类型 / 准备下载…",
+    jlDecrypt: "解密游戏数据…",
+    jlTransPrep: "翻译准备中…",
+    clPrefetching: "⚡ 预取中",
+    clCacheComplete: "✓ 缓存完成",
+    clCache: "缓存",
+    clNoPrefetch: "未预取（进入游戏后自动后台缓存）",
+    fileUnit: "文件",
+    alertNetSaved: "网络设置已保存",
+    confirmL10nExport: "导出【完整汉化包】？\n\n完整包含：引擎字典快照 + 最终对照表状态 + 本作翻译缓存条目，可离线分享直接导入。\n选「取消」= 普通包（仅译文+人名+原文表）。",
+    alertL10nTooLarge: "汉化包超过 64MB 上限",
+    alertImportFail: "导入失败（服务无响应）",
+    confirmPartialMatch: "疑似同游戏不同版本：\n包内 {packStrings} 条 / 本机 {targetStrings} 条文本，核心数据文件 {fileHit}/{fileCommon} 一致。\n部分翻译可能不适用。\n\n仍要导入吗？（将只导入双方都存在的条目）",
+    alertImportCancelled: "已取消导入",
+    alertImportFailGeneric: "导入失败: {error}",
+    alertImported: "已导入「{title}」：新增 {added} 条 / 覆盖 {overridden} 条",
+    confirmDeleteGame: "删除游戏 {id}?",
+    thOriginal: "原文 (日文)",
+    thTranslation: "译文 (中文)",
+    phUntranslated: "（未翻译）",
+    btnSaveTr: "保存",
+    btnSaved: "已存✓",
+    alertSaveFail: "保存失败",
+    confirmDelTranslation: "删除该条译文？（游戏中此句将恢复日文）",
+    alignGenerating: "对齐中…",
+    alignNoData: "（无对齐数据）",
+    alignWordByWord: "逐字对照",
+    clickToGenerate: "点击生成…",
+    noData: "无数据",
+    trInfo: "已译 {translated}/{total} · 匹配 {matched} · 第 {from}-{to} 条",
+    trTitleWithGame: "翻译对照表 — {title}",
+    confirmShutdown: "退出汉化服务？正在游戏中也会断开。",
+    beforeUnloadMsg: "关闭窗口将退出 freem 汉化（正在游玩的游戏也会关闭）。要继续请点击「留在本页」，或将窗口最小化。",
+    alertNoNames: "未检测到待确认名词",
+    phNameTranslation: "译名（留空=自动）",
+    alertNamesApplied: "已确认并全文统一 {count} 处（游戏内刷新生效）",
+    alertNamesConfirmed: "已确认人名",
+    rvReviewing: "AI 校对中 {checked}/{total}（已标记 {flagged} 条）— 当前结果实时可读",
+    rvPending: "{count} 条待裁决",
+    rvEmpty: "队列为空 — 点「重新校对」开始 AI 质检",
+    rvOriginal: "原文",
+    rvCurrent: "现译",
+    rvLiteral: "AI 直译",
+    btnKeepCurrent: "✓ 保留现译",
+    btnUseLiteral: "采用直译",
+    phCustomTranslation: "或输入自定义译文…",
+    btnCustom: "自定义",
+    alertReviewStarted: "校对已启动（需翻译已完成且有 API 配置）",
+    issueMeaning: "语义偏差",
+    issuePun: "梗丢失/误解",
+    issueOmission: "漏译",
+    csLocalScanning: "⏳ 本地扫描中…",
+    csZeroIssues: "0 条不一致",
+    csNoIssues: "✅ 未发现同一词多种译法",
+    csScanFail: "扫描失败：{msg}",
+    csIssuesCount: "{count} 条不一致",
+    csNoAiSuggestion: "（AI 建议未生成）",
+    csOccurrences: "{count} 处出现 · {forms} 种译法",
+    csAiSuggestion: "AI 建议：",
+    csExamples: "例句",
+    btnUnifyAs: "统一为「{term}」",
+    phCustomUnify: "自定义统一译名…",
+    btnCustomUnify: "按自定义统一",
+    btnGenAiSuggest: "✨ 生成 AI 建议（约 1 分钟）",
+    csAiPreparing: "准备中…",
+    csAiScanning: "本地扫描 {done}/{total}（已发现 {found} 条）",
+    csAiAnalyzing: "AI 分析译名建议中…（约 1 分钟）",
+    csAiTimeout: "超时，可重试",
+    csUnifying: "统一中…",
+    csNoChange: "无变化",
+    alertCsFail: "失败: {error}",
+    alertCsReqFail: "请求失败: {msg}",
+    statusLocalized: "已汉化",
+    statusTranslating: "翻译中 {done}/{total}",
+    statusJapanese: "日文",
+    tagLocalImport: "本地导入",
+    tagDownload: "下载版",
+    btnLocalize: "汉化",
+    btnContinueLocalize: "继续汉化",
+    btnExportL10n: "📦 导出汉化包",
+    btnEnter: "▶ 进入",
+    btnTransTable: "对照表",
+    btnNames: "人名",
+    btnReview: "校对",
+    btnConsistency: "一致",
+    btnDelete: "删除",
+    pendingImportFail: "导入失败",
+    pendingAddFail: "添加失败",
+    pendingImporting: "⏳ 导入中",
+    pendingAdding: "⏳ 添加中",
+    pendingSubmitting: "正在提交…",
+    noGames: "暂无游戏",
+    hintResumeDownload: '⏸ 点击"汉化"恢复下载',
+    hintPendingProcess: '⏸ 待处理 — 点「汉化」开始翻译，或顶部「导入汉化包」直接套用他人译文',
+    hintWaitingUpload: "等待上传…",
+    textMeta: "文本 {done}/{total}",
+    btnRetry: "重试",
+    btnRemove: "移除",
+    updNewVersion: "发现新版本",
+    updDownload: "下载新版",
+    updLater: "稍后",
+    updFound: "发现新版本 v{version}{note}（当前 v{current}）",
+  },
+  en: {
+    pageTitle: "freem Localization",
+    heroTitle: "freem Localization",
+    heroSub: "Japanese freem web games · One-click localization",
+    btnShutdown: "⏻ Exit",
+    btnLangToggle: "🌐 中文",
+    phGameInput: "Game ID or URL (e.g. 35127)",
+    btnStartGame: "🚀 Start / Add Game",
+    secApi: "Translation API",
+    phEndpoint: "API Endpoint (e.g. https://api.xx.com/v1)",
+    phModel: "Model name",
+    btnSave: "Save",
+    btnNetToggle: "Network & Download ▼",
+    lblConc: "Concurrency",
+    lblBatch: "Batch Size",
+    lblStyle: "Translation Style",
+    optFaithful: "Strictly Faithful",
+    optBalanced: "Balanced & Natural",
+    optPlayful: "Lively & Fun",
+    lblAutoReview: "Auto AI proofread after translation (off by default — run manually from library)",
+    lblTargetLang: "Target Language",
+    optZhCN: "简体中文",
+    optZhTW: "繁體中文",
+    optEn: "English",
+    nmTitle: "Name / Term Confirmation",
+    nmDesc: "Fix translations for these terms before machine translation. Leave empty = auto. Confirm to start translation.",
+    phNmSearch: "Search original / translation…",
+    btnNmConfirm: "✓ Confirm & Start Translation",
+    btnNmSkip: "Skip All (Auto)",
+    btnClose: "Close",
+    rvTitle: "AI Proofread Queue",
+    btnRvRun: "Re-proofread",
+    rvDesc: "Suspected issues flagged by AI. Three-column comparison, one-click verdict.",
+    csTitle: "Consistency Unification",
+    csScanning: "Scanning…",
+    csDesc: "Entries where the same Japanese word has multiple translations. AI suggestions available.",
+    secNetwork: "Network & Download",
+    btnNetCollapse: "Collapse ▲",
+    lblDlThreads: "DL Threads",
+    lblPrefetch: "Prefetch",
+    optPrefetchOn: "On (Recommended)",
+    optPrefetchOff: "Off",
+    lblBind: "Network Bind",
+    optBindDefault: "System Default",
+    optBindDirect: "Direct (Bypass VPN)",
+    lblProxy: "Proxy",
+    phProxy: "http://host:port or socks5://host:port (empty = direct)",
+    btnSaveNet: "Save Network Settings",
+    netDesc: "Download acceleration and prefetch are on by default. Adjust details here.",
+    secGames: "Game Library",
+    btnL10nImport: "📦 Import L10n Pack",
+    btnImpLocal: "📥 Import Local Game",
+    gamesLoading: "Loading…",
+    impTitle: "📥 Import Local Game",
+    impDesc: "Supports RPG Maker MV/MZ & Wolf RPG local games. Select folder or zip. Engine auto-detected.",
+    btnImpFolder: "📂 Select Game Folder",
+    btnImpZip: "🗜 Select Zip Archive",
+    btnImpCancel: "Cancel Import",
+    trTitle: "Translation Table",
+    phTrSearch: "Search original or translation… (Enter)",
+    lblTrUntr: "Untranslated only",
+    btnPrevPage: "‹ Prev",
+    btnNextPage: "Next ›",
+    trDesc: 'Untranslated rows have empty input — type directly and click "Save". Refresh in-game to see changes.',
+    msgWebGameParsing: "Web game link detected, parsing repository…",
+    msgSubmitFail: "Submission failed (server unresponsive), please retry",
+    msgWebGameAdded: "Added web game {name}, download & localization shown in library",
+    alertNoGameId: "Please enter a game ID or URL",
+    msgSubmitted: "Submitted {id}, progress shown in game library below",
+    msgConnecting: "Connecting…",
+    msgUploaded: "Uploaded {sent} / {total}",
+    msgServerProcessing: "Server processing (extract / detect engine / extract text)…",
+    msgImportFailPrefix: "❌ {msg} (please re-import)",
+    msgCannotStartImport: "Cannot start import (server unresponsive)",
+    msgChunkFail: "Chunk upload failed",
+    msgUploadFail: "Upload failed: {path}",
+    msgFinishFail: "Finish import request failed",
+    msgCancelled: "Cancelled",
+    jlNames: "Translated · Awaiting Name Confirmation",
+    jlImport: "Import Upload {done}/{total}",
+    jlExtract: "Extracting {done}/{total}",
+    jlDownloadBytes: "Downloading {done}/{total}",
+    jlDownloadFiles: "Downloading Text {done}/{total}",
+    jlTranslate: "Translating {done}/{total}",
+    jlReview: "Proofreading {done}/{total}",
+    jlDone: "✅ Done",
+    jlIdentify: "Identifying game type / Preparing download…",
+    jlDecrypt: "Decrypting game data…",
+    jlTransPrep: "Preparing translation…",
+    clPrefetching: "⚡ Prefetching",
+    clCacheComplete: "✓ Cache Complete",
+    clCache: "Cache",
+    clNoPrefetch: "Not prefetched (auto-cached when entering game)",
+    fileUnit: "files",
+    alertNetSaved: "Network settings saved",
+    confirmL10nExport: "Export [Full L10n Pack]?\n\nFull pack includes engine dictionary snapshot + final translation table + cache entries.\nCancel = Standard pack only.",
+    alertL10nTooLarge: "L10n pack exceeds 64MB limit",
+    alertImportFail: "Import failed (server unresponsive)",
+    confirmPartialMatch: "Possible different version of same game:\nPack has {packStrings} strings / Local has {targetStrings} strings, core data files {fileHit}/{fileCommon} match.\n\nContinue import?",
+    alertImportCancelled: "Import cancelled",
+    alertImportFailGeneric: "Import failed: {error}",
+    alertImported: 'Imported "{title}": {added} added / {overridden} overridden',
+    confirmDeleteGame: "Delete game {id}?",
+    thOriginal: "Original (Japanese)",
+    thTranslation: "Translation",
+    phUntranslated: "(Untranslated)",
+    btnSaveTr: "Save",
+    btnSaved: "Saved ✓",
+    alertSaveFail: "Save failed",
+    confirmDelTranslation: "Delete this translation? (This line will revert to Japanese in-game)",
+    alignGenerating: "Aligning…",
+    alignNoData: "(No alignment data)",
+    alignWordByWord: "Word-by-word",
+    clickToGenerate: "Click to generate…",
+    noData: "No data",
+    trInfo: "Translated {translated}/{total} · Matched {matched} · #{from}-{to}",
+    trTitleWithGame: "Translation Table — {title}",
+    confirmShutdown: "Exit localization service? Active games will also disconnect.",
+    beforeUnloadMsg: "Closing this window will exit freem Localization. Click Stay on Page to continue.",
+    alertNoNames: "No terms detected for confirmation",
+    phNameTranslation: "Translation (empty = auto)",
+    alertNamesApplied: "Confirmed and unified {count} occurrences (refresh in-game to apply)",
+    alertNamesConfirmed: "Names confirmed",
+    rvReviewing: "AI Proofreading {checked}/{total} ({flagged} flagged) — Live results readable",
+    rvPending: "{count} pending verdicts",
+    rvEmpty: 'Queue empty — Click "Re-proofread" to start AI QA',
+    rvOriginal: "Original",
+    rvCurrent: "Current",
+    rvLiteral: "AI Literal",
+    btnKeepCurrent: "✓ Keep Current",
+    btnUseLiteral: "Use Literal",
+    phCustomTranslation: "Or enter custom translation…",
+    btnCustom: "Custom",
+    alertReviewStarted: "Proofreading started (requires completed translation & API config)",
+    issueMeaning: "Semantic Drift",
+    issuePun: "Pun Lost/Misread",
+    issueOmission: "Omission",
+    csLocalScanning: "⏳ Local scanning…",
+    csZeroIssues: "0 inconsistencies",
+    csNoIssues: "✅ No inconsistent translations found",
+    csScanFail: "Scan failed: {msg}",
+    csIssuesCount: "{count} inconsistencies",
+    csNoAiSuggestion: "(AI suggestion not generated)",
+    csOccurrences: "{count} occurrences · {forms} variants",
+    csAiSuggestion: "AI Suggestion: ",
+    csExamples: "Examples",
+    btnUnifyAs: 'Unify as "{term}"',
+    phCustomUnify: "Custom unified term…",
+    btnCustomUnify: "Unify Custom",
+    btnGenAiSuggest: "✨ Generate AI Suggestions (~1 min)",
+    csAiPreparing: "Preparing…",
+    csAiScanning: "Local scan {done}/{total} ({found} found)",
+    csAiAnalyzing: "AI analyzing term suggestions… (~1 min)",
+    csAiTimeout: "Timed out, retry available",
+    csUnifying: "Unifying…",
+    csNoChange: "No change",
+    alertCsFail: "Failed: {error}",
+    alertCsReqFail: "Request failed: {msg}",
+    statusLocalized: "Localized",
+    statusTranslating: "Translating {done}/{total}",
+    statusJapanese: "Japanese",
+    tagLocalImport: "Local Import",
+    tagDownload: "Download",
+    btnLocalize: "Localize",
+    btnContinueLocalize: "Continue",
+    btnExportL10n: "📦 Export L10n",
+    btnEnter: "▶ Enter",
+    btnTransTable: "Table",
+    btnNames: "Names",
+    btnReview: "Proofread",
+    btnConsistency: "Consistency",
+    btnDelete: "Delete",
+    pendingImportFail: "Import Failed",
+    pendingAddFail: "Add Failed",
+    pendingImporting: "⏳ Importing",
+    pendingAdding: "⏳ Adding",
+    pendingSubmitting: "Submitting…",
+    noGames: "No games",
+    hintResumeDownload: '⏸ Click "Localize" to resume download',
+    hintPendingProcess: '⏸ Pending — Click "Localize" to translate, or "Import L10n Pack" above',
+    hintWaitingUpload: "Waiting for upload…",
+    textMeta: "Text {done}/{total}",
+    btnRetry: "Retry",
+    btnRemove: "Remove",
+    updNewVersion: "New Version Available",
+    updDownload: "Download",
+    updLater: "Later",
+    updFound: "New version v{version}{note} (current v{current})",
+  }
+};
+let LANG = "zh";
+let TARGET_LANG = "zh-CN";
+function T(key, params) {
+  let s = (I18N[LANG] && I18N[LANG][key]) || (I18N.zh[key]) || key;
+  if (params) for (const k in params) s = s.replace("{" + k + "}", params[k]);
+  return s;
+}
+function applyI18n() {
+  document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
+  document.title = T("pageTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+      el.placeholder = T(key);
+    } else {
+      el.textContent = T(key);
+    }
+  });
+  document.querySelectorAll("[data-i18n-opt]").forEach(el => {
+    el.textContent = T(el.getAttribute("data-i18n-opt"));
+  });
+  const langBtn = document.getElementById("langToggleBtn");
+  if (langBtn) langBtn.textContent = T("btnLangToggle");
+}
+async function toggleLang() {
+  LANG = LANG === "zh" ? "en" : "zh";
+  applyI18n();
+  try { await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({ uiLang: LANG }) }); } catch {}
+}
+async function onTargetLangChange(sel) {
+  TARGET_LANG = sel.value;
+  try { await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({ targetLang: TARGET_LANG }) }); } catch {}
+}
+
 let currentId = null, timer = null;
 const $ = s => document.querySelector(s);
 const parseId = v => (String(v).match(/(\d+)/) || [])[1] || "";
@@ -262,15 +689,30 @@ const parseId = v => (String(v).match(/(\d+)/) || [])[1] || "";
 const pendingIds = new Map(); // id -> 提交时间戳(占位行防呆: 服务重启等异常 3 分钟后自动撤下)
 const nmAutoPopped = new Set(); // t1(作者需求:自动推进): 已自动弹过人名确认模态的 id(防重复弹; stage 离开 names 后重置)
 async function startGame() {
+  const raw = $("#gameInput").value.trim();
+  // 2026-09-04 智能汉化: 网页游戏链接(webrpg.org / github.io / github.com)走 /api/webadd
+  if (/webrpg\.org|github\.io|github\.com/i.test(raw)) {
+    await saveCfg();
+    $("#gameInput").value = "";
+    $("#startHint").textContent = T("msgWebGameParsing");
+    const w = await fetch(API_BASE + "/api/webadd", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: raw }) }).then(x => x.json()).catch(() => null);
+    if (!w) { $("#startHint").textContent = T("msgSubmitFail"); return; }
+    if (w.error) { $("#startHint").textContent = w.error; return; }
+    pendingIds.set(w.id, Date.now());
+    $("#startHint").textContent = T("msgWebGameAdded", {name: w.name || w.id});
+    refreshGames();
+    return;
+  }
   const id = parseId($("#gameInput").value);
-  if (!id) return alert("请输入游戏ID或网址");
+  if (!id) return alert(T("alertNoGameId"));
   await saveCfg();
   $("#gameInput").value = "";
   pendingIds.set(id, Date.now());
-  $("#startHint").textContent = "已提交 " + id + "，进度在下方游戏库中实时显示";
+  $("#startHint").textContent = T("msgSubmitted", {id: id});
   refreshGames();
-  const r = await fetch(`/api/start/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
-  if (!r) { pendingIds.delete(id); $("#startHint").textContent = "提交失败（服务无响应），请重试"; return; }
+  // 2026-09-04: 原 fetch 相对路径漏 API_BASE——真站页面上「添加」会打到真站 404 而非本地工具。
+  const r = await fetch(API_BASE + `/api/start/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
+  if (!r) { pendingIds.delete(id); $("#startHint").textContent = T("msgSubmitFail"); return; }
   if (r.error) { $("#startHint").textContent = `${id}：${r.error}`; if (r.error !== "任务进行中") pendingIds.delete(id); }
   refreshGames();
 }
@@ -289,7 +731,7 @@ function impReset() {
   impState = null;
   $("#impPick").classList.remove("hide");
   $("#impProg").classList.add("hide");
-  $("#impCancelBtn").textContent = "取消导入";
+  $("#impCancelBtn").textContent = T("btnImpCancel");
 }
 (function () {
   $("#impDir").addEventListener("change", e => { if (e.target.files.length) impStart([...e.target.files], "folder"); e.target.value = ""; });
@@ -308,47 +750,47 @@ async function impStart(files, mode) {
   $("#impPick").classList.add("hide");
   $("#impProg").classList.remove("hide");
   $("#impName").textContent = name;
-  impUi("0%", "连接服务…");
+  impUi("0%", T("msgConnecting"));
   const manifest = files.map(f => ({ path: rel(f), size: f.size }));
   const beg = await fetch(API_BASE + "/api/import/begin", { method: "POST", body: JSON.stringify({ name, mode, files: manifest }) }).then(x => x.json()).catch(() => null);
-  if (!beg || !beg.importId) { $("#impStatus").textContent = "❌ " + (beg && beg.error || "无法开始导入（服务无响应）"); $("#impCancelBtn").textContent = "关闭"; return; }
+  if (!beg || !beg.importId) { $("#impStatus").textContent = "❌ " + (beg && beg.error || T("msgCannotStartImport")); $("#impCancelBtn").textContent = T("btnClose"); return; }
   pendingIds.set(beg.id, Date.now());
   refreshGames();
   const total = beg.totalBytes || 1;
   let sent = 0;
   impState = { iid: beg.importId, id: beg.id, aborted: false };
-  const bump = n => { sent += n; impUi(Math.min(99, Math.round(sent / total * 100)) + "%", `已上传 ${fmtMB(sent)} / ${fmtMB(total)}`); };
+  const bump = n => { sent += n; impUi(Math.min(99, Math.round(sent / total * 100)) + "%", T("msgUploaded", {sent: fmtMB(sent), total: fmtMB(total)})); };
   try {
     if (mode === "zip") {
       const f = files[0], CH = 8 * 1024 * 1024;
       for (let off = 0, seq = 0; off < f.size; off += CH, seq++) {
-        if (impState.aborted) throw new Error("已取消");
+        if (impState.aborted) throw new Error(T("msgCancelled"));
         const blob = f.slice(off, Math.min(f.size, off + CH));
         const r = await fetch(`${API_BASE}/api/import/zip-chunk?iid=${encodeURIComponent(beg.importId)}&seq=${seq}`, { method: "POST", body: blob }).then(x => x.json()).catch(() => null);
-        if (!r || !r.ok) throw new Error((r && r.error) || "分片上传失败");
+        if (!r || !r.ok) throw new Error((r && r.error) || T("msgChunkFail"));
         bump(r.bytes);
       }
     } else {
       const queue = files.slice();
       await Promise.all(Array.from({ length: 6 }, async () => {
         while (queue.length) {
-          if (impState.aborted) throw new Error("已取消");
+          if (impState.aborted) throw new Error(T("msgCancelled"));
           const f = queue.shift();
           const r = await fetch(`${API_BASE}/api/import/file?iid=${encodeURIComponent(beg.importId)}&p=${encodeURIComponent(rel(f))}`, { method: "POST", body: f }).then(x => x.json()).catch(() => null);
-          if (!r || !r.ok) throw new Error((r && r.error) || `上传失败: ${rel(f)}`);
+          if (!r || !r.ok) throw new Error((r && r.error) || T("msgUploadFail", {path: rel(f)}));
           bump(r.bytes);
         }
       }));
     }
-    impUi("100%", "服务端处理中（解压 / 识别引擎 / 提取文本）…");
+    impUi("100%", T("msgServerProcessing"));
     const fin = await fetch(API_BASE + "/api/import/finish", { method: "POST", body: JSON.stringify({ importId: beg.importId }) }).then(x => x.json()).catch(() => null);
-    if (!fin || !fin.ok) throw new Error((fin && fin.error) || "完成导入请求失败");
+    if (!fin || !fin.ok) throw new Error((fin && fin.error) || T("msgFinishFail"));
     impReset();
     impClose();
     refreshGames();
   } catch (e) {
-    $("#impStatus").textContent = "❌ " + e.message + "（请重新导入）";
-    $("#impCancelBtn").textContent = "关闭";
+    $("#impStatus").textContent = T("msgImportFailPrefix", {msg: e.message});
+    $("#impCancelBtn").textContent = T("btnClose");
   }
 }
 function impCancel() {
@@ -374,19 +816,19 @@ function jobPct(j) {
 }
 function jobLabel(j) {
   const p = j.progress || {};
-  if (j.stage === "names") return "已译完 · 待确认人名"; // t1(人名时机): 翻译完成后才弹人名确认(names=翻译后停点)
-  if (p.kind === "import" && p.total) return `导入上传 ${fmtMB(p.bytes||0)}/${fmtMB(p.total)}`; // t2
-  if (p.kind === "extract" && p.total) return `解压 ${p.done||0}/${p.total}`; // t2
+  if (j.stage === "names") return T("jlNames"); // t1(人名时机): 翻译完成后才弹人名确认(names=翻译后停点)
+  if (p.kind === "import" && p.total) return T("jlImport", {done: fmtMB(p.bytes||0), total: fmtMB(p.total)}); // t2
+  if (p.kind === "extract" && p.total) return T("jlExtract", {done: p.done||0, total: p.total}); // t2
   if (p.kind === "download" && p.total) return p.bytes !== undefined
-    ? `下载 ${fmtMB(p.bytes)}/${fmtMB(p.total)}`
-    : `下载文本 ${p.files||0}/${p.total}`;
-  if (p.kind === "translate" && p.total) return `翻译 ${p.done||0}/${p.total}`;
-  if (j.stage === "review") return `校对 ${(p.checked||0)}/${(p.total||0)}`;
-  if (j.stage === "done") return "✅ 完成";
+    ? T("jlDownloadBytes", {done: fmtMB(p.bytes), total: fmtMB(p.total)})
+    : T("jlDownloadFiles", {done: p.files||0, total: p.total});
+  if (p.kind === "translate" && p.total) return T("jlTranslate", {done: p.done||0, total: p.total});
+  if (j.stage === "review") return T("jlReview", {done: p.checked||0, total: p.total||0});
+  if (j.stage === "done") return T("jlDone");
   if (j.stage === "error") return "❌ " + (j.error||"").slice(0,50);
-  if (j.stage === "download") return "识别游戏类型 / 准备下载…";
-  if (j.stage === "decrypt") return "解密游戏数据…";
-  if (j.stage === "translate") return "翻译准备中…";
+  if (j.stage === "download") return T("jlIdentify");
+  if (j.stage === "decrypt") return T("jlDecrypt");
+  if (j.stage === "translate") return T("jlTransPrep");
   return j.stage || "";
 }
 // ---- t1(2026-08-29 缓存进度条): 每行游戏的缓存进度 ----
@@ -399,17 +841,17 @@ function cacheLineHtml(g, j) {
     const total = pf.total || (cs && cs.totalEst) || 0;
     const done = pf.done || 0;
     const pct = total ? Math.min(99, Math.round(done / total * 100)) : 4;
-    return `<div class="cache-line">⚡ 预取中<div class="bar"><div class="run" style="width:${Math.max(4, pct)}%"></div></div><span>${done}/${total} 文件${cs && cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
+    return `<div class="cache-line">${T("clPrefetching")}<div class="bar"><div class="run" style="width:${Math.max(4, pct)}%"></div></div><span>${done}/${total} ${T("fileUnit")}${cs && cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
   }
   if (cs && cs.totalEst) {
     const got = (cs.files || 0) + (cs.misses || 0);
     const pct = Math.min(100, Math.round(got / cs.totalEst * 100));
-    if (cs.complete || pct >= 100) return `<div class="cache-line"><span style="color:var(--ok)">✓ 缓存完成</span><div class="bar"><div class="full" style="width:100%"></div></div><span title="${cs.misses ? cs.misses + ' 个推测文件不存在(已跳过, 不影响)' : ''}">${cs.files} 文件 · ${fmtMB(cs.bytes || 0)}</span></div>`;
-    return `<div class="cache-line">缓存<div class="bar"><div style="width:${pct}%"></div></div><span>${cs.files}/${cs.totalEst} 文件 · ${pct}%${cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
+    if (cs.complete || pct >= 100) return `<div class="cache-line"><span style="color:var(--ok)">${T("clCacheComplete")}</span><div class="bar"><div class="full" style="width:100%"></div></div><span title="${cs.misses ? cs.misses + ' 个推测文件不存在(已跳过, 不影响)' : ''}">${cs.files} ${T("fileUnit")} · ${fmtMB(cs.bytes || 0)}</span></div>`;
+    return `<div class="cache-line">${T("clCache")}<div class="bar"><div style="width:${pct}%"></div></div><span>${cs.files}/${cs.totalEst} ${T("fileUnit")} · ${pct}%${cs.bytes ? " · " + fmtMB(cs.bytes) : ""}</span></div>`;
   }
-  if (cs && cs.files) return `<div class="cache-line">缓存 ${cs.files} 文件 · ${fmtMB(cs.bytes || 0)}</div>`;
-  if (g.type === "download" || g.type === "wolf") return ""; // 在线下载版/Wolf 本地完整且无 stats.json → 无缓存行
-  return `<div class="cache-line">未预取（进入游戏后自动后台缓存）</div>`;
+  if (cs && cs.files) return `<div class="cache-line">${T("clCache")} ${cs.files} ${T("fileUnit")} · ${fmtMB(cs.bytes || 0)}</div>`;
+  if (g.type === "download" || g.type === "wolf") return "";
+  return `<div class="cache-line">${T("clNoPrefetch")}</div>`;
 }
 async function saveCfg() {
   await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
@@ -417,6 +859,8 @@ async function saveCfg() {
     trConc: Number($("#trConc").value) || 8, trBatch: Number($("#trBatch").value) || 12,
     style: $("#trStyle").value,
     autoReview: $("#autoReview").checked,
+    uiLang: LANG,
+    targetLang: TARGET_LANG,
   }) });
 }
 function toggleNet(show) { $("#netCard").style.display = show ? "" : "none"; }
@@ -427,7 +871,7 @@ async function saveNet() {
     dlBind: $("#dlBind").value,
     net: { prefetch: $("#prefetch").value },
   }) });
-  alert("网络设置已保存");
+  alert(T("alertNetSaved"));
 }
 async function openGame(id) {
   const r = await fetch(`/api/open/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
@@ -442,7 +886,7 @@ async function resume(id, wantTranslate) {
 function l10nExport(id) {
   // t3(完整汉化包): 确认框选普通/完整——完整包含引擎字典快照+最终对照表状态+本作缓存条目,
   // 体积更大, 接收方无需本机字典也能完整显示, 可独立分发。
-  const full = confirm("导出【完整汉化包】？\n\n完整包含：引擎字典快照 + 最终对照表状态 + 本作翻译缓存条目，可离线分享直接导入。\n选「取消」= 普通包（仅译文+人名+原文表）。");
+  const full = confirm(T("confirmL10nExport"));
   window.open((typeof API_BASE !== "undefined" ? API_BASE : "") + `/api/l10n/export/${id}${full ? "?full=1" : ""}`, "_blank");
 }
 let _l10nInput = null;
@@ -458,25 +902,25 @@ function l10nImportPick() {
 async function l10nImportUpload() {
   const f = _l10nInput.files && _l10nInput.files[0];
   if (!f) return;
-  if (f.size > 64 * 1024 * 1024) return alert("汉化包超过 64MB 上限");
+  if (f.size > 64 * 1024 * 1024) return alert(T("alertL10nTooLarge"));
   const base = typeof API_BASE !== "undefined" ? API_BASE : "";
   const bytes = await f.arrayBuffer();
   const post = (q) => fetch(base + "/api/l10n/import" + (q || ""), { method: "POST", body: bytes }).then(x => x.json()).catch(() => null);
   let r = await post("");
-  if (!r) return alert("导入失败（服务无响应）");
+  if (!r) return alert(T("alertImportFail"));
   // t3(指纹三级匹配): partial → 警告确认后只导双方都有的条目
   if (r.needConfirm === "partial") {
-    const go = confirm(`疑似同游戏不同版本：\n包内 ${r.packStrings} 条 / 本机 ${r.targetStrings} 条文本，核心数据文件 ${r.fileHit}/${r.fileCommon} 一致。\n部分翻译可能不适用。\n\n仍要导入吗？（将只导入双方都存在的条目）`);
-    if (!go) return alert("已取消导入");
+    const go = confirm(T("confirmPartialMatch", {packStrings: r.packStrings, targetStrings: r.targetStrings, fileHit: r.fileHit, fileCommon: r.fileCommon}));
+    if (!go) return alert(T("alertImportCancelled"));
     r = await post("?confirmPartial=1");
-    if (!r) return alert("导入失败（服务无响应）");
+    if (!r) return alert(T("alertImportFail"));
   }
-  if (!r.ok) return alert("导入失败: " + (r.error || "未知错误"));
-  alert(`已导入「${r.title || r.gameId}」：新增 ${r.added ?? 0} 条 / 覆盖 ${r.overridden ?? 0} 条${r.match && r.match !== "exact" && r.match !== "legacy" ? "（部分匹配导入）" : ""}${r.engineAppliedMerged ? "，字典快照补 " + r.engineAppliedMerged + " 条" : ""}`);
+  if (!r.ok) return alert(T("alertImportFailGeneric", {error: r.error || "?"}));
+  alert(T("alertImported", {title: r.title || r.gameId, added: r.added ?? 0, overridden: r.overridden ?? 0}));
   refreshGames();
 }
 async function del(id) {
-  if (!confirm(`删除游戏 ${id}?`)) return;
+  if (!confirm(T("confirmDeleteGame", {id: id}))) return;
   await fetch(`/api/delete/${id}`, { method: "POST" });
   refreshGames();
 }
@@ -484,7 +928,7 @@ async function del(id) {
 let trId = null, trOffset = 0;
 async function openTr(id, title) {
   trId = id; trOffset = 0;
-  $("#trTitle").textContent = `翻译对照表 — ${title || id}`;
+  $("#trTitle").textContent = T("trTitleWithGame", {title: title || id});
   $("#trModal").classList.remove("hide");
   $("#trSearch").value = "";
   await trLoad();
@@ -497,24 +941,24 @@ async function trLoad() {
   const q = encodeURIComponent($("#trSearch").value.trim());
   const f = $("#trUntr").checked ? "&filter=untranslated" : "";
   const r = await fetch(`/api/tr/${trId}?q=${q}&offset=${trOffset}&limit=100${f}`).then(x => x.json());
-  if (!r.items) { $("#trTable").innerHTML = `<div style="padding:20px;color:var(--dim)">${r.error || "无数据"}</div>`; $("#trInfo").textContent = ""; return; }
-  $("#trInfo").textContent = `已译 ${r.translated}/${r.total} · 匹配 ${r.matched} · 第 ${trOffset + 1}-${Math.min(trOffset + 100, r.matched)} 条`;
-  $("#trTable").innerHTML = `<table><tr><th>原文 (日文)</th><th>译文 (中文)</th><th></th></tr>` +
+  if (!r.items) { $("#trTable").innerHTML = `<div style="padding:20px;color:var(--dim)">${r.error || T("noData")}</div>`; $("#trInfo").textContent = ""; return; }
+  $("#trInfo").textContent = T("trInfo", {translated: r.translated, total: r.total, matched: r.matched, from: trOffset + 1, to: Math.min(trOffset + 100, r.matched)});
+  $("#trTable").innerHTML = `<table><tr><th>${T("thOriginal")}</th><th>${T("thTranslation")}</th><th></th></tr>` +
     r.items.map(x => `<tr${x.t === null ? ' style="opacity:.75"' : ""}>
-      <td class="o">${esc(x.o)}<details style="margin-top:4px"><summary class="meta" style="cursor:pointer">逐字对照</summary><div class="trAlign" data-jp="${esc(x.o)}" data-loaded="0" style="padding:4px 0;color:var(--dim);font-size:12px">点击生成…</div></details></td>
-      <td><input data-o="${esc(x.o)}" value="${x.t === null ? "" : esc(x.t)}" placeholder="${x.t === null ? "（未翻译）" : ""}"></td>
-      <td><button class="saveBtn" onclick="trSave(this)">保存</button> ${x.t === null ? "" : '<button class="saveBtn" onclick="trDel(this)">✕</button>'}</td>
+      <td class="o">${esc(x.o)}<details style="margin-top:4px"><summary class="meta" style="cursor:pointer">${T("alignWordByWord")}</summary><div class="trAlign" data-jp="${esc(x.o)}" data-loaded="0" style="padding:4px 0;color:var(--dim);font-size:12px">${T("clickToGenerate")}</div></details></td>
+      <td><input data-o="${esc(x.o)}" value="${x.t === null ? "" : esc(x.t)}" placeholder="${x.t === null ? T("phUntranslated") : ""}"></td>
+      <td><button class="saveBtn" onclick="trSave(this)">${T("btnSaveTr")}</button> ${x.t === null ? "" : '<button class="saveBtn" onclick="trDel(this)">✕</button>'}</td>
     </tr>`).join("") + `</table>`;
   // lazy-load alignment on details open
   document.querySelectorAll(".trAlign").forEach(el => {
     el.parentElement.addEventListener("toggle", async () => {
       if (!el.parentElement.open || el.dataset.loaded === "1") return;
       el.dataset.loaded = "1";
-      el.textContent = "对齐中…";
+      el.textContent = T("alignGenerating");
       const r = await fetch(`/api/align/${trId}`, { method: "POST", body: JSON.stringify({ lines: [el.dataset.jp] }) }).then(x => x.json()).catch(() => null);
       if (r && r.pairs && r.pairs.length) {
         el.innerHTML = r.pairs.map(p => `<div><span style="color:#aeb9c6">${esc(p.jp)}</span> ⇄ <b>${esc(p.cn)}</b></div>`).join("");
-      } else el.textContent = "（无对齐数据）";
+      } else el.textContent = T("alignNoData");
     });
   });
 }
@@ -522,19 +966,19 @@ async function trSave(btn) {
   const input = btn.parentElement.previousElementSibling.querySelector("input");
   const o = input.dataset.o, t = input.value;
   const r = await fetch(`/api/tr/${trId}`, { method: "POST", body: JSON.stringify({ o, t }) }).then(x => x.json());
-  if (r.ok) { btn.classList.remove("dirty"); btn.textContent = "已存✓"; setTimeout(() => btn.textContent = "保存", 1200); }
-  else alert(r.error || "保存失败");
+  if (r.ok) { btn.classList.remove("dirty"); btn.textContent = T("btnSaved"); setTimeout(() => btn.textContent = T("btnSaveTr"), 1200); }
+  else alert(r.error || T("alertSaveFail"));
 }
 async function trDel(btn) {
   const input = btn.parentElement.previousElementSibling.querySelector("input");
   const o = input.dataset.o;
-  if (!confirm("删除该条译文？（游戏中此句将恢复日文）")) return;
+  if (!confirm(T("confirmDelTranslation"))) return;
   const r = await fetch(`/api/tr/${trId}?o=${encodeURIComponent(o)}`, { method: "DELETE" }).then(x => x.json());
   if (r.ok) trLoad();
 }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 async function shutdown() {
-  if (!confirm("退出汉化服务？正在游戏中也会断开。")) return;
+  if (!confirm(T("confirmShutdown"))) return;
   await fetch(API_BASE + "/api/shutdown", { method: "POST" }).catch(() => {});
   window.close();
   setTimeout(() => location.replace("about:blank"), 800);
@@ -545,11 +989,11 @@ async function openNames(id) {
   nmId = id;
   const r = await fetch(`/api/names/${id}`).then(x => x.json());
   const cands = r.candidates || [];
-  if (!cands.length) return alert("未检测到待确认名词");
+  if (!cands.length) return alert(T("alertNoNames"));
   const confirmed = r.confirmed || {};
   $("#nmList").innerHTML = cands.map((c, i) => `<div class="row" style="padding:4px 0;border-bottom:1px solid #222a33">
     <span style="width:190px">${esc(c)}</span>
-    <input type="text" class="grow nmInput" data-jp="${esc(c)}" value="${esc(confirmed[c] || "")}" placeholder="译名（留空=自动）">
+    <input type="text" class="grow nmInput" data-jp="${esc(c)}" value="${esc(confirmed[c] || "")}" placeholder="${T("phNameTranslation")}">
   </div>`).join("");
   if ($("#nmSearch")) $("#nmSearch").value = ""; // 重开时清空搜索
   $("#nmModal").classList.remove("hide");
@@ -570,8 +1014,8 @@ async function nmSave() {
   const r = await fetch(`/api/names/${nmId}`, { method: "POST", body: JSON.stringify({ names }) }).then(x => x.json());
   nmClose();
   // t1(人名时机): 确认发生在翻译完成后——应用人名=全文统一, 流程收尾 done, 无续跑
-  if (r.applied) alert(`已确认并全文统一 ${r.applied} 处（游戏内刷新生效）`);
-  else alert("已确认人名");
+  if (r.applied) alert(T("alertNamesApplied", {count: r.applied}));
+  else alert(T("alertNamesConfirmed"));
   refreshGames();
 }
 async function nmSkip() {
@@ -589,37 +1033,37 @@ async function openReview(id) {
   const p = j.progress || {};
   if (j.stage === "review" && p.kind === "review") {
     const pct = p.total ? Math.round(p.checked / p.total * 100) : 0;
-    $("#rvInfo").innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div style="width:${pct}%"></div></div> AI 校对中 ${p.checked || 0}/${p.total || 0}（已标记 ${p.flagged || 0} 条）— 当前结果实时可读`;
+    $("#rvInfo").innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div style="width:${pct}%"></div></div> ${T("rvReviewing", {checked: p.checked||0, total: p.total||0, flagged: p.flagged||0})}`;
   } else {
     $("#rvInfo").textContent = "";
   }
   const r = await fetch(`/api/review/${id}`).then(x => x.json());
   const items = r.items || [];
-  if (!$("#rvInfo").textContent && !$("#rvInfo").innerHTML.includes("bar")) $("#rvInfo").textContent = `${items.length} 条待裁决`;
+  if (!$("#rvInfo").textContent && !$("#rvInfo").innerHTML.includes("bar")) $("#rvInfo").textContent = T("rvPending", {count: items.length});
   if (!items.length && !$("#rvInfo").innerHTML.includes("bar")) {
-    $("#rvList").innerHTML = '<div style="padding:20px;color:var(--dim)">队列为空 — 点「重新校对」开始 AI 质检</div>';
+    $("#rvList").innerHTML = `<div style="padding:20px;color:var(--dim)">${T("rvEmpty")}</div>`;
   } else {
     $("#rvList").innerHTML = items.map(x => `<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:linear-gradient(180deg,#1c242f,#1a212b)">
       <div class="row" style="margin-bottom:8px"><span class="tag part" style="margin-left:0">${issueTag(x.issue)}</span><span class="meta">${esc(x.note || "")}</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px">
-          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px">原文</div>
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px">${T("rvOriginal")}</div>
           <div style="color:#aeb9c6;font-size:13px">${esc(x.jp)}</div>
         </div>
         <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px;border:1px solid rgba(62,207,142,.25)">
-          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--ok)">现译</div>
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--ok)">${T("rvCurrent")}</div>
           <div style="font-size:13px">${esc(x.cur)}</div>
         </div>
         <div style="flex:1;min-width:180px;background:#0c1015;border-radius:8px;padding:8px 10px;border:1px solid rgba(255,180,84,.25)">
-          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--warn)">AI 直译</div>
+          <div class="meta" style="font-size:10px;margin-bottom:3px;letter-spacing:1px;color:var(--warn)">${T("rvLiteral")}</div>
           <div style="font-size:13px;color:var(--warn)">${esc(x.literal)}</div>
         </div>
       </div>
       <div class="row" style="margin-top:10px">
-        <button onclick="rvDecide('${esc(x.jp)}','keep')">✓ 保留现译</button>
-        <button class="ghost" onclick="rvDecide('${esc(x.jp)}','literal')">采用直译</button>
-        <input type="text" class="grow rvCustom" data-jp="${esc(x.jp)}" placeholder="或输入自定义译文…">
-        <button class="ghost" onclick="rvCustom(this)">自定义</button>
+        <button onclick="rvDecide('${esc(x.jp)}','keep')">${T("btnKeepCurrent")}</button>
+        <button class="ghost" onclick="rvDecide('${esc(x.jp)}','literal')">${T("btnUseLiteral")}</button>
+        <input type="text" class="grow rvCustom" data-jp="${esc(x.jp)}" placeholder="${T("phCustomTranslation")}">
+        <button class="ghost" onclick="rvCustom(this)">${T("btnCustom")}</button>
       </div>
     </div>`).join("");
     // auto-refresh while running
@@ -628,7 +1072,7 @@ async function openReview(id) {
   $("#rvModal").classList.remove("hide");
 }
 function issueTag(issue) {
-  const m = { meaning_diverge: "语义偏差", pun_lost: "梗丢失/误解", omission: "漏译" };
+  const m = { meaning_diverge: T("issueMeaning"), pun_lost: T("issuePun"), omission: T("issueOmission") };
   return `<span class="tag part">${m[issue] || issue}</span>`;
 }
 function rvClose() { clearTimeout(window.__rvTimer); $("#rvModal").classList.add("hide"); }
@@ -645,7 +1089,7 @@ async function rvCustom(btn) {
 }
 async function rvRun() {
   await fetch(`/api/review/${rvId}`, { method: "PUT" });
-  alert("校对已启动（需翻译已完成且有 API 配置）");
+  alert(T("alertReviewStarted"));
   setTimeout(() => openReview(rvId), 15000);
 }
 
@@ -654,40 +1098,40 @@ let csId = null;
 async function openConsistency(id) {
   csId = id;
   $("#csModal").classList.remove("hide");
-  $("#csInfo").innerHTML = `本地扫描中… <div class="bar" style="width:200px;display:inline-block;vertical-align:middle"><div id="csLocalBar" style="width:30%;transition:width .3s"></div></div>`;
-  $("#csList").innerHTML = '<div style="padding:20px;color:var(--dim)">⏳ 本地扫描中…</div>';
+  $("#csInfo").innerHTML = `${T("csScanning")} <div class="bar" style="width:200px;display:inline-block;vertical-align:middle"><div id="csLocalBar" style="width:30%;transition:width .3s"></div></div>`;
+  $("#csList").innerHTML = `<div style="padding:20px;color:var(--dim)">${T("csLocalScanning")}</div>`;
   const t0 = Date.now();
   const grow = setInterval(() => { const b = document.getElementById("csLocalBar"); if (b) b.style.width = Math.min(90, 30 + (Date.now() - t0) / 50) + "%"; }, 200);
   try {
     const r = await fetch(`/api/consistency/${id}`).then(x => x.json());
     clearInterval(grow);
     const b = document.getElementById("csLocalBar"); if (b) b.style.width = "100%";
-    if (!(r.issues || []).length) { $("#csInfo").textContent = "0 条不一致"; $("#csList").innerHTML = '<div style="padding:20px;color:var(--dim)">✅ 未发现同一词多种译法</div>'; return; }
+    if (!(r.issues || []).length) { $("#csInfo").textContent = T("csZeroIssues"); $("#csList").innerHTML = `<div style="padding:20px;color:var(--dim)">${T("csNoIssues")}</div>`; return; }
     renderCs(r.issues);
-  } catch (e) { clearInterval(grow); $("#csInfo").textContent = "扫描失败：" + e.message; }
+  } catch (e) { clearInterval(grow); $("#csInfo").textContent = T("csScanFail", {msg: e.message}); }
 }
 function renderCs(issues) {
   window.__csIssues = issues;
   const hasAnyAI = issues.some(i => i.unified);
-  $("#csInfo").textContent = `${issues.length} 条不一致${hasAnyAI ? "" : "（AI 建议未生成）"}`;
+  $("#csInfo").textContent = T("csIssuesCount", {count: issues.length}) + (hasAnyAI ? "" : T("csNoAiSuggestion"));
   $("#csList").innerHTML = issues.map((x, i) => `<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px" data-i="${i}">
-    <div class="row"><b>${esc(x.token)}</b><span class="meta">${x.occurrences} 处出现 · ${x.forms.length} 种译法</span></div>
+    <div class="row"><b>${esc(x.token)}</b><span class="meta">${T("csOccurrences", {count: x.occurrences, forms: x.forms.length})}</span></div>
     <div style="margin:6px 0;font-size:13px">${x.forms.map(f => `<span class="tag ${f.form === (x.unified || "") ? "cn" : "jp"}" style="margin-right:6px">${esc(f.form)} ×${f.count}</span>`).join("")}</div>
-    ${x.unified ? `<div class="meta">AI 建议：<b style="color:var(--ok)">${esc(x.unified)}</b>${x.reason ? " — " + esc(x.reason) : ""}</div>` : ""}
-    <details style="margin:4px 0"><summary class="meta">例句</summary>${(x.examples || []).map(e => `<div class="meta">· ${esc(e.jp)}<br>&nbsp;&nbsp;→ ${esc(e.cn)}</div>`).join("")}</details>
+    ${x.unified ? `<div class="meta">${T("csAiSuggestion")}<b style="color:var(--ok)">${esc(x.unified)}</b>${x.reason ? " — " + esc(x.reason) : ""}</div>` : ""}
+    <details style="margin:4px 0"><summary class="meta">${T("csExamples")}</summary>${(x.examples || []).map(e => `<div class="meta">· ${esc(e.jp)}<br>&nbsp;&nbsp;→ ${esc(e.cn)}</div>`).join("")}</details>
     <div class="row" style="margin-top:4px">
-      ${x.unified ? `<button onclick="csUnify(${i}, '${esc(x.unified)}')">统一为「${esc(x.unified)}」</button>` : ""}
-      <input type="text" class="grow csCustom" data-i="${i}" data-token="${esc(x.token)}" placeholder="自定义统一译名…">
-      <button class="ghost" onclick="csCustom(this)">按自定义统一</button>
+      ${x.unified ? `<button onclick="csUnify(${i}, '${esc(x.unified)}')">${T("btnUnifyAs", {term: esc(x.unified)})}</button>` : ""}
+      <input type="text" class="grow csCustom" data-i="${i}" data-token="${esc(x.token)}" placeholder="${T("phCustomUnify")}">
+      <button class="ghost" onclick="csCustom(this)">${T("btnCustomUnify")}</button>
     </div>
   </div>`).join("") +
-  `<div class="row" style="margin-top:10px"><button class="ghost" onclick="csAskAI()">✨ 生成 AI 建议（约 1 分钟）</button><span class="meta" id="csAiStatus"></span></div>`;
+  `<div class="row" style="margin-top:10px"><button class="ghost" onclick="csAskAI()">${T("btnGenAiSuggest")}</button><span class="meta" id="csAiStatus"></span></div>`;
 }
 async function csAskAI() {
   const tokens = (window.__csIssues || []).map(i => i.token);
   if (!tokens.length) return;
   const status = $("#csAiStatus");
-  status.innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div id="csAiBar" style="width:5%"></div></div> <span id="csAiText">准备中…</span>`;
+  status.innerHTML = `<div class="bar" style="width:240px;display:inline-block;vertical-align:middle"><div id="csAiBar" style="width:5%"></div></div> <span id="csAiText">${T("csAiPreparing")}</span>`;
   await fetch(`/api/consistency/${csId}`, { method: "PUT", body: JSON.stringify({ tokens }) });
   // poll progress
   for (let i = 0; i < 60; i++) {
@@ -705,32 +1149,32 @@ async function csAskAI() {
     if (p.phase === "scan") {
       const pct = p.total ? Math.round(p.done / p.total * 90) : 10;
       const bar = document.getElementById("csAiBar"); if (bar) bar.style.width = pct + "%";
-      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = `本地扫描 ${p.done}/${p.total}（已发现 ${p.found} 条）`;
+      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = T("csAiScanning", {done: p.done, total: p.total, found: p.found});
     } else if (p.phase === "ai") {
       const bar = document.getElementById("csAiBar"); if (bar) bar.style.width = "95%";
-      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = "AI 分析译名建议中…（约 1 分钟）";
+      const txt = document.getElementById("csAiText"); if (txt) txt.textContent = T("csAiAnalyzing");
     }
   }
-  status.textContent = "超时，可重试";
+  status.textContent = T("csAiTimeout");
 }
 function csClose() { $("#csModal").classList.add("hide"); }
 async function csUnify(i, unified) {
   const iss = window.__csIssues[i];
   const r = await fetch(`/api/consistency/${csId}`, { method: "POST", body: JSON.stringify({ token: iss.token, unified }) }).then(x => x.json());
   if (r.ok) openConsistency(csId); // rescan
-  else alert("失败: " + (r.error || "未知"));
+  else alert(T("alertCsFail", {error: r.error || "?"}));
 }
 async function csCustom(btn) {
   const inp = btn.parentElement.querySelector(".csCustom") || btn.previousElementSibling;
   const val = inp.value.trim();
   if (!val) { inp.focus(); return; }
-  btn.disabled = true; btn.textContent = "统一中…";
+  btn.disabled = true; btn.textContent = T("csUnifying");
   try {
     const r = await fetch(`/api/consistency/${csId}`, { method: "POST", body: JSON.stringify({ token: inp.dataset.token, unified: val }) }).then(x => x.json());
-    if (!r.ok) alert("失败: " + (r.error || "未知"));
-    else if (!r.changed) { btn.textContent = "无变化"; setTimeout(() => { btn.disabled = false; btn.textContent = "按自定义统一"; }, 1200); return; }
+    if (!r.ok) alert(T("alertCsFail", {error: r.error || "?"}));
+    else if (!r.changed) { btn.textContent = T("csNoChange"); setTimeout(() => { btn.disabled = false; btn.textContent = T("btnCustomUnify"); }, 1200); return; }
     openConsistency(csId);
-  } catch (e) { alert("请求失败: " + e.message); btn.disabled = false; btn.textContent = "按自定义统一"; }
+  } catch (e) { alert(T("alertCsReqFail", {msg: e.message})); btn.disabled = false; btn.textContent = T("btnCustomUnify"); }
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape") { trClose(); nmClose(); rvClose(); csClose(); } });
 let gamesTimer = null, refreshingGames = false, lastGamesHtml = null; // t1(卡顿): 上次渲染结果, 未变化不重写 DOM
@@ -767,48 +1211,47 @@ async function refreshGames() {
   const el = $("#games");
   // t1(卡顿): 轮询期间内容未变化时跳过整表 innerHTML 重写——避免每次轮询都重建整棵 DOM
   // (重排/重绘/丢滚动位置), 模态与列表交互不再被周期性打断。
-  const nextHtml = (!list.length && !pend.length) ? '<span class="meta">暂无游戏</span>' : pend.map(pid => {
+  const nextHtml = (!list.length && !pend.length) ? `<span class="meta">${T("noGames")}</span>` : pend.map(pid => {
     const j = jobs[pid] || {};
     const err = j.stage === "error";
-    const isLocalImp = String(pid).startsWith("local-"); // t2: 本地导入占位(失败重试无意义, 重新导入即可)
-    const line = err ? `❌ ${(j.error || "").slice(0, 60)}` : ((j.log && j.log.length) ? String(j.log[j.log.length - 1]).replace(/^\[[^\]]*\]\s*/, "") : "正在提交…");
+    const isLocalImp = String(pid).startsWith("local-");
+    const line = err ? `❌ ${(j.error || "").slice(0, 60)}` : ((j.log && j.log.length) ? String(j.log[j.log.length - 1]).replace(/^\[[^\]]*\]\s*/, "") : T("pendingSubmitting"));
     return `<div class="game">
-      <div class="grow"><b>${pid}</b><span class="tag part">${err ? (isLocalImp ? "导入失败" : "添加失败") : (isLocalImp ? "⏳ 导入中" : "⏳ 添加中")}</span><div class="meta">ID ${pid}</div>
+      <div class="grow"><b>${pid}</b><span class="tag part">${err ? (isLocalImp ? T("pendingImportFail") : T("pendingAddFail")) : (isLocalImp ? T("pendingImporting") : T("pendingAdding"))}</span><div class="meta">ID ${pid}</div>
       <div class="job-line" style="color:${err ? "var(--err)" : "var(--dim)"};font-size:11px">${esc(line)}</div></div>
-      ${(err && !isLocalImp) ? `<button class="ghost" onclick="pendingRetry('${pid}')">重试</button>` : ""}
-      <button class="ghost" onclick="pendingDrop('${pid}')">移除</button>
+      ${(err && !isLocalImp) ? `<button class="ghost" onclick="pendingRetry('${pid}')">${T("btnRetry")}</button>` : ""}
+      <button class="ghost" onclick="pendingDrop('${pid}')">${T("btnRemove")}</button>
     </div>`;
   }).join("") + list.map(g => {
     const st = !g.stringsN ? "jp" : g.trN >= g.stringsN ? "cn" : "part";
-    const label = st === "cn" ? "已汉化" : st === "part" ? `翻译中 ${g.trN}/${g.stringsN}` : "日文";
-    // t2(本地导入): 本地游戏显示「本地导入」徽章(freem 下载版徽章仅对 freem 来源显示)
+    const label = st === "cn" ? T("statusLocalized") : st === "part" ? T("statusTranslating", {done: g.trN, total: g.stringsN}) : T("statusJapanese");
     const typeTag = g.source === "local"
-      ? `<span class="tag jp" style="background:rgba(62,207,142,.13);color:var(--ok)">本地导入</span>`
-      : (g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">下载版</span>` : "");
+      ? `<span class="tag jp" style="background:rgba(62,207,142,.13);color:var(--ok)">${T("tagLocalImport")}</span>`
+      : (g.type === "download" ? `<span class="tag jp" style="background:rgba(77,163,255,.15);color:var(--acc)">${T("tagDownload")}</span>` : "");
     const j = jobs[g.id] || {};
     const jp = jobPct(j);
     const jl = jobLabel(j);
     const jobHtml = (jl && j.stage && j.stage !== "done" && j.stage !== "error")
       ? `<div class="job-line"><div class="bar" style="width:100px;height:5px;display:inline-block;vertical-align:1px"><div style="width:${jp}%;background:var(--acc);height:100%"></div></div> <span style="color:var(--dim);font-size:11px">${jl}</span></div>`
       : (j.stage === "error" ? `<div class="job-line" style="color:var(--err);font-size:11px">❌ ${(j.error||"").slice(0,60)}</div>`
-        : (!j.stage && g.type === "download" && !g.ready && g.source !== "local" ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 点击"汉化"恢复下载</div>`
-          : ((!j.stage || j.stage === "done") && g.stringsN > 0 && (g.trN || 0) < g.stringsN ? `<div class="job-line" style="color:var(--dim);font-size:11px">⏸ 待处理 — 点「汉化」开始翻译，或顶部「导入汉化包」直接套用他人译文</div>`
-            : (!j.stage && g.source === "local" && g.importing ? `<div class="job-line" style="color:var(--dim);font-size:11px">等待上传…</div>` : ""))));
+        : (!j.stage && g.type === "download" && !g.ready && g.source !== "local" ? `<div class="job-line" style="color:var(--dim);font-size:11px">${T("hintResumeDownload")}</div>`
+          : ((!j.stage || j.stage === "done") && g.stringsN > 0 && (g.trN || 0) < g.stringsN ? `<div class="job-line" style="color:var(--dim);font-size:11px">${T("hintPendingProcess")}</div>`
+            : (!j.stage && g.source === "local" && g.importing ? `<div class="job-line" style="color:var(--dim);font-size:11px">${T("hintWaitingUpload")}</div>` : ""))));
     // t1(UI 直观化): 行内信息分层——标题+状态徽章 / ID·引擎·文本量 / 缓存进度行 / 任务进度行
     const metaBits = [`ID ${g.id}`];
     if (g.engine && g.engine !== "unknown") metaBits.push(g.engine);
-    if (g.stringsN) metaBits.push(`文本 ${g.trN}/${g.stringsN}`);
+    if (g.stringsN) metaBits.push(T("textMeta", {done: g.trN, total: g.stringsN}));
     return `<div class="game">
       <div class="grow"><b>${g.title || g.id}</b><span class="tag ${st}">${label}</span>${typeTag}<div class="meta">${metaBits.join(" · ")}</div>${cacheLineHtml(g, j)}${jobHtml}</div>
       <div class="acts">
-      ${st !== "cn" ? `<button class="ghost" onclick="resume('${g.id}', true)">${!g.stringsN || !g.trN ? "汉化" : "继续汉化"}</button>` : ""}
-      ${g.trN > 0 ? `<button class="ghost" onclick="l10nExport('${g.id}')">📦 导出汉化包</button>` : ""}
-      <button onclick="openGame('${g.id}')">▶ 进入</button>
-      <button class="ghost" onclick='openTr("${g.id}", ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>对照表</button>
-      <button class="ghost" onclick="openNames('${g.id}')">人名</button>
-      <button class="ghost" onclick="openReview('${g.id}')">校对</button>
-      <button class="ghost" onclick="openConsistency('${g.id}')">一致</button>
-      <button class="danger" onclick="del('${g.id}')">删除</button>
+      ${st !== "cn" ? `<button class="ghost" onclick="resume('${g.id}', true)">${!g.stringsN || !g.trN ? T("btnLocalize") : T("btnContinueLocalize")}</button>` : ""}
+      ${g.trN > 0 ? `<button class="ghost" onclick="l10nExport('${g.id}')">${T("btnExportL10n")}</button>` : ""}
+      <button onclick="openGame('${g.id}')">${T("btnEnter")}</button>
+      <button class="ghost" onclick='openTr("${g.id}", ${JSON.stringify((g.title||String(g.id)).replace(/'/g,""))})'>${T("btnTransTable")}</button>
+      <button class="ghost" onclick="openNames('${g.id}')">${T("btnNames")}</button>
+      <button class="ghost" onclick="openReview('${g.id}')">${T("btnReview")}</button>
+      <button class="ghost" onclick="openConsistency('${g.id}')">${T("btnConsistency")}</button>
+      <button class="danger" onclick="del('${g.id}')">${T("btnDelete")}</button>
       </div>
     </div>`;
   }).join("");
@@ -834,6 +1277,12 @@ async function refreshGames() {
   if (c.dlBind) $("#dlBind").value = c.dlBind;
   if (c.adBypass) $("#dlBind").value = c.adBypass; // 显示别名(历史键)
   if (c.net && c.net.prefetch) $("#prefetch").value = c.net.prefetch;
+  // i18n: load persisted language preferences
+  if (c.uiLang === "en" || c.uiLang === "zh") LANG = c.uiLang;
+  if (c.targetLang) TARGET_LANG = c.targetLang;
+  const tlSel = document.getElementById("targetLangSel");
+  if (tlSel) tlSel.value = TARGET_LANG;
+  applyI18n();
   refreshGames();
 })();
 </script>
@@ -891,7 +1340,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   var f0 = document.getElementById("adBotFr0");
   var f1 = document.getElementById("adBotFr1");
   // 2026-09-05 条款核查: HilltopAds T&C/拒量清单(publishers-help 9071516)无 banner 自动刷新禁令,
-  // 沿用轮换(2026-09-05 作者裁定 10min→60min, 展示质量优先)。MultiTag Banner 官方默认捆绑 Popup,
+  // 故可轮换; 周期定为 60 分钟(见下方 setInterval, 作者裁定展示质量优先)。MultiTag Banner 官方默认捆绑 Popup,
   // 实测载荷按请求条件下发; 广告点击由 window.open 收容钩子捕获, 不会接管应用窗口。
   function refresh() {
     var b = Date.now();
@@ -899,6 +1348,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
     f1.src = "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
   }
   refresh();
+  // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
   setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
 })();
 </script>
@@ -906,9 +1356,9 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 
 <!-- 更新提醒（2026-08-28）：网站发新版 Release 后弹横幅 -->
 <div id="updBar" class="hide" style="position:fixed;top:0;left:0;right:0;z-index:2147483647;background:linear-gradient(90deg,#2c5f8f,#4da3ff);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.35)">
-  <span style="flex:1;font-size:14px">🆕 <b id="updText">发现新版本</b></span>
-  <a id="updBtn" href="https://fan1.top/" target="_blank" style="background:#fff;color:#2c5f8f;border:none;border-radius:6px;padding:6px 16px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:700">下载新版</a>
-  <button id="updClose" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer">稍后</button>
+  <span style="flex:1;font-size:14px">🆕 <b id="updText" data-i18n="updNewVersion">发现新版本</b></span>
+  <a id="updBtn" href="https://fan1.top/" target="_blank" style="background:#fff;color:#2c5f8f;border:none;border-radius:6px;padding:6px 16px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:700" data-i18n="updDownload">下载新版</a>
+  <button id="updClose" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer" data-i18n="updLater">稍后</button>
 </div>
 <script>
 (function () {
@@ -918,7 +1368,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   function check() {
     fetch(API_BASE + "/api/version").then(function (r) { return r.json(); }).then(function (v) {
       if (v && v.update && v.update.available && !sessionStorage.getItem("updDismissed")) {
-        document.getElementById("updText").textContent = "发现新版本 v" + String(v.update.version).replace(/^v/i, "") + (v.update.note ? " — " + v.update.note : "") + "（当前 v" + v.current + "）";
+        document.getElementById("updText").textContent = T("updFound", {version: String(v.update.version).replace(/^v/i, ""), note: v.update.note ? " — " + v.update.note : "", current: v.current});
         document.getElementById("updBtn").href = "https://fan1.top/"; // 2026-09-03: 官网优先(作者定稿: 主站根, 不带锚点)——老版本 exe 的 API 仍返回 GitHub 页, 页面侧统一改指官网
         // 2026-09-03: 点击转交系统默认浏览器(exe 经 /api/open 唤起)——app 专用窗口内下载体验差;
         // 老版本 exe 无此路由(fetch 404/失败)自动退回本窗口打开, 行为不变。

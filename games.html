@@ -29,11 +29,11 @@
   footer a{color:#fff}
 </style>
 </head>
-<body>
-<nav><a href="index.html">首页</a><a href="games.html">游戏库</a><a href="index.html#download">下载工具</a></nav>
+<body data-i18n-page="games">
+<nav><a href="index.html" data-i18n="navHome">首页</a><a href="games.html" data-i18n="navGames">游戏库</a><a href="index.html#download" data-i18n="navDownload">下载工具</a><a href="javascript:void(0)" id="langToggleBtn" onclick="toggleSiteLang()" style="float:right;margin-right:16px;cursor:pointer;background:rgba(255,255,255,.15);border-radius:4px;padding:4px 12px">EN</a></nav>
 <div class="wrap">
-  <h1>已收录游戏库</h1>
-  <p class="sub">已收录 281 款 freem 免费游戏，本批生成 90 款详情页，持续扩充中。点击卡片查看详情与原页下载。</p>
+  <h1 data-i18n="gamesH1">已收录游戏库</h1>
+  <p class="sub" data-i18n="gamesSub">已收录 281 款 freem 免费游戏，本批生成 90 款详情页，持续扩充中。点击卡片查看详情与原页下载。</p>
   <h2>RPGツクールMV <span class="cnt">30</span></h2><div class="grid"><a class="gcard" href="game/freem-25971.html">
         <img src="https://fpiccdn.com/25971s/w200/h150/mcrop/ejpg/?2309c56666b4705c0930a922e79a405b" alt="絶界アビスシンカー" loading="lazy">
         <div class="gc-body">
@@ -666,6 +666,8 @@
         </div>
       </a></div>
 </div>
-<footer>fan1.top · fan1 汉化工具 · <a href="index.html">首页</a><br>游戏版权归原作者所有，译文仅供学习交流</footer>
+<footer><span data-i18n="gamesFooter">fan1.top · fan1 汉化工具 · </span><a href="index.html" data-i18n="navHome">首页</a><br><span data-i18n="gamesFooterDisc">游戏版权归原作者所有，译文仅供学习交流</span></footer>
+<script src="i18n.js"></script>
+<script>document.addEventListener("DOMContentLoaded",applySiteI18n);</script>
 </body>
 </html>
