@@ -268,6 +268,8 @@ l.parentNode.insertBefore(s, l);
     </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
 <script src="i18n.js"></script>
+<!-- 2026-09-06 Option B: 保护三 banner 点击不被 popunder 透明层劫持(点 banner=正常跳广告页, 不弹窗) -->
+<script src="banner-guard.js"></script>
 <script>document.addEventListener("DOMContentLoaded",applySiteI18n);</script>
 </body>
 </html>
