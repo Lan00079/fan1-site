@@ -216,9 +216,22 @@ l.parentNode.insertBefore(s, l);
     </script>
 
     <!-- HilltopAds VAST 3.0 左侧停靠播放器（2026-09-05 作者指定）：有填充才显示, 静音自动播, 同一条循环重播(loop), 10 分钟后才拉新广告; 空壳/失败自隐藏并 5min 后温和重试; 窄屏隐藏 -->
-    <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:9998;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
+    <div id="vastBox" style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:340px;z-index:2147483000;background:#000;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.35);overflow:hidden">
         <video id="vastV" muted playsinline controls loop style="width:100%;display:block"></video>
     </div>
+    <script>
+    // 2026-09-06 修复: popunder 引擎(runIframeWrappers)会给页面 iframe 盖 z-index 2147483647 的透明点击层,
+    // 且 autobind 在 document 上捕获一切点击——视频第一次点击必然触发弹窗。此处:
+    // (a) 捕获阶段拦截 #vastBox 内所有 click 的冒泡, 保证点视频=播视频, 不触发 popunder;
+    // (b) z-index 提到引擎透明层之下但足够高, 视频区域不被 banner 透明层误盖。
+    (function () {
+        var box = document.getElementById("vastBox");
+        if (!box) return;
+        ["click", "mousedown", "mouseup", "touchstart"].forEach(function (t) {
+            box.addEventListener(t, function (e) { e.stopPropagation(); }, true);
+        });
+    })();
+    </script>
     <style>@media (max-width: 1250px) { #vastBox { display: none !important; } }</style>
     <script>
 (function () {
