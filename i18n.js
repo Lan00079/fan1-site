@@ -242,8 +242,23 @@
   // Expose globally
   window.SITE_I18N = SITE_I18N;
 
+  function detectBrowserLang() {
+    try {
+      var cands = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "zh"];
+      for (var i = 0; i < cands.length; i++) {
+        var l = String(cands[i] || "").toLowerCase();
+        if (l.indexOf("zh") === 0) return "zh";   // zh / zh-CN / zh-TW / zh-HK 都归中文
+      }
+      return "en";                                 // 非中文环境默认英文
+    } catch (e) { return "zh"; }
+  }
   function getLang() {
-    try { return localStorage.getItem("fan1_lang") || "zh"; } catch (e) { return "zh"; }
+    // 手动切换优先(localStorage 有记录则尊重); 未设置过 → 按浏览器语言自动判定
+    try {
+      var saved = localStorage.getItem("fan1_lang");
+      if (saved === "zh" || saved === "en") return saved;
+    } catch (e) {}
+    return detectBrowserLang();
   }
   function setLang(lang) {
     try { localStorage.setItem("fan1_lang", lang); } catch (e) {}
