@@ -1354,37 +1354,19 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   var adBase = q.get("port") ? (typeof API_BASE !== "undefined" ? API_BASE : "") : "";
   var rails = [document.getElementById("adRailL"), document.getElementById("adRailR")];
   function hideRails() { rails.forEach(function (el) { if (el) el.style.display = "none"; }); }
-  var active = false;
-  var loaded = [false, false];
-  var tries = [0, 0];
-  function paint(slot) {
-    var f = slot ? f1 : f0;
-    tries[slot]++;
-    f.src = adBase + "/adframe?slot=" + slot + "&bust=" + (slot ? "B1" : "B0") + Date.now() + "&r=" + tries[slot];
-  }
   function refresh() {
-    if (!active) return;
-    loaded = [false, false];
-    tries = [0, 0];
-    paint(0);   // 左: zone 1
-    paint(1);   // 右: zone 2
+    var b = Date.now();
+    f0.src = adBase + "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
+    f1.src = adBase + "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
   }
-  f0.addEventListener("load", function () { loaded[0] = true; });
-  f1.addEventListener("load", function () { loaded[1] = true; });
-  // 2026-09-11 看门狗: 真站页面(https://fan1.top)下 iframe 指向跨源的 https://fan1.top:<port>,
-  // 实测首次加载会卡住(请求发出但 frame 不触发 load, 左右随机、重载即恢复)。
-  // 本地 /adframe 是自身服务响应(实测 20ms 级), 故阈值取 1s: 卡住时 1s 后立刻换 bust 重试,
-  // 广告出现时间≈1-2s, 与官网 banner 基本一致; 正常加载 <300ms 不会被误伤。最多重试 3 次。
-  setInterval(function () {
-    if (!active) return;
-    [0, 1].forEach(function (slot) {
-      if (!loaded[slot] && tries[slot] < 3) paint(slot);
-    });
-  }, 1000);
+  // 2026-09-11 教训: 绝不能拿 iframe 的 load 事件当"加载成功"信号。
+  // 广告引擎会在帧内继续建创意子帧、发追踪 ping, 父帧 load 要等全部子资源结束,
+  // 实测这些请求长期 pending → load 永不触发。据此重试(看门狗)会把正在加载的广告
+  // ERR_ABORTED 掉, 越修越坏。这里只设一次 src, 之后交给浏览器。
   // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
   // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
   fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
-    .then(function (r) { if (r && r.ok) { active = true; refresh(); } else { hideRails(); } })
+    .then(function (r) { if (r && r.ok) refresh(); else hideRails(); })
     .catch(hideRails);
   // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
   setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
