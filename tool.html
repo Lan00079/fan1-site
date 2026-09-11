@@ -1339,7 +1339,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 <div class="ad-rail" id="adRailR" style="position:fixed;top:50%;right:12px;transform:translateY(-50%);width:300px;height:250px;z-index:2147483646">
   <iframe id="adBotFr1" scrolling="no" style="width:300px;height:250px;border:0;display:block" title="ad"></iframe>
 </div>
-<style>@media (max-width: 1499px) { .ad-rail { display: none !important; } } .ad-rail { outline: 3px dashed #ff3b30; outline-offset: -3px; }</style>
+<style>@media (max-width: 1499px) { .ad-rail { display: none !important; } }</style>
 <script>
 (function () {
   var f0 = document.getElementById("adBotFr0");
@@ -1355,32 +1355,36 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   var rails = [document.getElementById("adRailL"), document.getElementById("adRailR")];
   function hideRails() { rails.forEach(function (el) { if (el) el.style.display = "none"; }); }
   var active = false;
+  var loaded = [false, false];
+  var tries = [0, 0];
+  function paint(slot) {
+    var f = slot ? f1 : f0;
+    tries[slot]++;
+    f.src = adBase + "/adframe?slot=" + slot + "&bust=" + (slot ? "B1" : "B0") + Date.now() + "&r=" + tries[slot];
+  }
   function refresh() {
     if (!active) return;
-    var b = Date.now();
-    f0.src = adBase + "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
-    f1.src = adBase + "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
+    loaded = [false, false];
+    tries = [0, 0];
+    paint(0);   // 左: zone 1
+    paint(1);   // 右: zone 2
   }
+  f0.addEventListener("load", function () { loaded[0] = true; });
+  f1.addEventListener("load", function () { loaded[1] = true; });
+  // 2026-09-11 看门狗: 真站页面(https://fan1.top)下 iframe 指向跨源的 https://fan1.top:<port>,
+  // 实测首次加载会偶发卡住(请求发出但 frame 永不触发 load, 左右随机、重载即恢复)。
+  // 6 秒未 load 就换 bust 重设 src, 最多 3 次, 把偶发挂起兜住。
+  setInterval(function () {
+    if (!active) return;
+    [0, 1].forEach(function (slot) {
+      if (!loaded[slot] && tries[slot] < 3) paint(slot);
+    });
+  }, 6000);
   // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
   // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
   fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
-    .then(function (r) { if (r && r.ok) { active = true; refresh(); window.__diag && window.__diag("probeOk"); } else { hideRails(); window.__diag && window.__diag("probeFail"); } })
-    .catch(function () { hideRails(); window.__diag && window.__diag("probeErr"); });
-  // ===== TEMP DIAG（诊断用，事后回滚）=====
-  (function () {
-    function d(tag) {
-      try {
-        document.title = "DIAG vw=" + innerWidth + "x" + innerHeight + " " + tag
-          + " railL=" + getComputedStyle(rails[0]).display + " railR=" + getComputedStyle(rails[1]).display
-          + " src0=" + (f0.src ? "Y" : "N") + " ld0=" + (f0.__ld ? "Y" : "N") + " ld1=" + (f1.__ld ? "Y" : "N");
-      } catch (e) { }
-    }
-    f0.addEventListener("load", function () { f0.__ld = 1; d("frameLoaded"); });
-    f1.addEventListener("load", function () { f1.__ld = 1; d("frameLoaded"); });
-    window.__diag = d; d("boot");
-    setTimeout(function () { d("t5"); }, 5000);
-    setTimeout(function () { d("t15"); }, 15000);
-  })();
+    .then(function (r) { if (r && r.ok) { active = true; refresh(); } else { hideRails(); } })
+    .catch(hideRails);
   // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
   setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
 })();
