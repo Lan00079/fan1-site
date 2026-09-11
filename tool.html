@@ -1361,9 +1361,9 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
     f0.src = adBase + "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
     f1.src = adBase + "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
   }
-  // 没有本地服务就不要挂空框(纯浏览器访问 /adframe 必 404 → 两个大白框)。
-  // 先探一次: 探针在正常路径就是同一路由(200/404), 不执行脚本故不计展示。
-  fetch(adBase + "/adframe?slot=0&probe=" + Date.now())
+  // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
+  // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
+  fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
     .then(function (r) { if (r && r.ok) { active = true; refresh(); } else { hideRails(); } })
     .catch(hideRails);
   // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
