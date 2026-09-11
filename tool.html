@@ -1379,7 +1379,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
     [0, 1].forEach(function (slot) {
       if (!loaded[slot] && tries[slot] < 3) paint(slot);
     });
-  }, 6000);
+  }, 3000);
   // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
   // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
   fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
