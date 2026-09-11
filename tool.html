@@ -1372,14 +1372,15 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   f0.addEventListener("load", function () { loaded[0] = true; });
   f1.addEventListener("load", function () { loaded[1] = true; });
   // 2026-09-11 看门狗: 真站页面(https://fan1.top)下 iframe 指向跨源的 https://fan1.top:<port>,
-  // 实测首次加载会偶发卡住(请求发出但 frame 永不触发 load, 左右随机、重载即恢复)。
-  // 6 秒未 load 就换 bust 重设 src, 最多 3 次, 把偶发挂起兜住。
+  // 实测首次加载会卡住(请求发出但 frame 不触发 load, 左右随机、重载即恢复)。
+  // 本地 /adframe 是自身服务响应(实测 20ms 级), 故阈值取 1s: 卡住时 1s 后立刻换 bust 重试,
+  // 广告出现时间≈1-2s, 与官网 banner 基本一致; 正常加载 <300ms 不会被误伤。最多重试 3 次。
   setInterval(function () {
     if (!active) return;
     [0, 1].forEach(function (slot) {
       if (!loaded[slot] && tries[slot] < 3) paint(slot);
     });
-  }, 3000);
+  }, 1000);
   // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
   // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
   fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
