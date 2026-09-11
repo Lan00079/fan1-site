@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="unsafe-url">
+<title>ad</title>
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
+</head>
+<body>
+<script>
+/* 2026-09-06 兜底空壳：静态站上的 /adframe
+ *
+ * 正常情况根本不会走到这里：工具页面(tool.html?port=NNNN)里的广告 iframe
+ * 走 API_BASE → https://fan1.top:<port>/adframe，由本地服务直供，经 ad-direct 代理回环。
+ *
+ * 只有两种请求会命中本页：
+ *   1) 旧的缓存页面(改版前用的相对路径 /adframe) —— 以前会在这里渲染出 GitHub 的
+ *      "404 File not found" 页面，广告框里就是一个大 404，用户看到的就是这个。
+ *   2) 普通浏览器直接访问静态站的 /adframe。
+ *
+ * 所以本页做两件事：
+ *   - 默认什么都不渲染(绝不能再出现 404 页)。
+ *   - 若来源页(referrer)带着 port 参数(说明是被工具打开的旧页面)，就自己把广告
+ *     从本地服务取回来并写入本文档(document.write 会正常执行广告脚本)，
+ *     让旧缓存副本也能正常出广告，而不是留空。
+ */
+(function () {
+  try {
+    var m = /[?&]port=(\d{1,5})/.exec(document.referrer || "");
+    if (!m) return;                                  // 普通访客：留空，不显示任何内容
+    var port = m[1];
+    if (port === "443") port = "";
+    var url = "https://fan1.top" + (port ? ":" + port : "") + "/adframe" + location.search;
+    var done = false;
+    var timer = setTimeout(function () { done = true; }, 4000);   // 超时即放弃，保持空白
+    fetch(url, { credentials: "omit" })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (t) {
+        if (done || !t) return;
+        done = true; clearTimeout(timer);
+        document.open(); document.write(t); document.close();
+      })
+      .catch(function () { /* 本地服务不可达：保持空白 */ });
+  } catch (e) { /* 任何异常都保持空白 */ }
+})();
+</script>
+</body>
+</html>
