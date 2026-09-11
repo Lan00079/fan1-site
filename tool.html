@@ -1347,12 +1347,25 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   // 2026-09-05 条款核查: HilltopAds T&C/拒量清单(publishers-help 9071516)无 banner 自动刷新禁令,
   // 故可轮换; 周期定为 60 分钟(见下方 setInterval, 作者裁定展示质量优先)。MultiTag Banner 官方默认捆绑 Popup,
   // 实测载荷按请求条件下发; 广告点击由 window.open 收容钩子捕获, 不会接管应用窗口。
+  // 2026-09-06 根因修复: 本页在工具里由真站提供(https://fan1.top/tool.html?port=NNNN),
+  // 相对路径 /adframe 会打到 GitHub Pages 静态站 → 404 → 广告框全白(旧版底部横幅同样问题)。
+  // 必须走 API_BASE(= https://fan1.top:<port>, 经 ad-direct 代理回到本地服务)才拿得到广告。
+  var q = new URLSearchParams(location.search);
+  var adBase = q.get("port") ? (typeof API_BASE !== "undefined" ? API_BASE : "") : "";
+  var rails = [document.getElementById("adRailL"), document.getElementById("adRailR")];
+  function hideRails() { rails.forEach(function (el) { if (el) el.style.display = "none"; }); }
+  var active = false;
   function refresh() {
+    if (!active) return;
     var b = Date.now();
-    f0.src = "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
-    f1.src = "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
+    f0.src = adBase + "/adframe?slot=0&bust=B0" + b;   // 左: zone 1
+    f1.src = adBase + "/adframe?slot=1&bust=B1" + b;   // 右: zone 2
   }
-  refresh();
+  // 没有本地服务就不要挂空框(纯浏览器访问 /adframe 必 404 → 两个大白框)。
+  // 先探一次: 探针在正常路径就是同一路由(200/404), 不执行脚本故不计展示。
+  fetch(adBase + "/adframe?slot=0&probe=" + Date.now())
+    .then(function (r) { if (r && r.ok) { active = true; refresh(); } else { hideRails(); } })
+    .catch(hideRails);
   // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
   setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
 })();
