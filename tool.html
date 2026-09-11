@@ -1339,7 +1339,7 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
 <div class="ad-rail" id="adRailR" style="position:fixed;top:50%;right:12px;transform:translateY(-50%);width:300px;height:250px;z-index:2147483646">
   <iframe id="adBotFr1" scrolling="no" style="width:300px;height:250px;border:0;display:block" title="ad"></iframe>
 </div>
-<style>@media (max-width: 1499px) { .ad-rail { display: none !important; } }</style>
+<style>@media (max-width: 1499px) { .ad-rail { display: none !important; } } .ad-rail { outline: 3px dashed #ff3b30; outline-offset: -3px; }</style>
 <script>
 (function () {
   var f0 = document.getElementById("adBotFr0");
@@ -1364,8 +1364,23 @@ fetch(API_BASE + "/api/heartbeat", { method: "POST" }).catch(() => {});
   // 没有本地服务就不要挂空框(纯浏览器访问 → 两个挡点击的透明空框; 隐藏侧栏最安全)。
   // 探针用 /api/version(只有本地服务有): 静态站上必 404, 且不像 /adframe 那样会碰广告路由。
   fetch(adBase + "/api/version?probe=" + Date.now(), { cache: "no-store" })
-    .then(function (r) { if (r && r.ok) { active = true; refresh(); } else { hideRails(); } })
-    .catch(hideRails);
+    .then(function (r) { if (r && r.ok) { active = true; refresh(); window.__diag && window.__diag("probeOk"); } else { hideRails(); window.__diag && window.__diag("probeFail"); } })
+    .catch(function () { hideRails(); window.__diag && window.__diag("probeErr"); });
+  // ===== TEMP DIAG（诊断用，事后回滚）=====
+  (function () {
+    function d(tag) {
+      try {
+        document.title = "DIAG vw=" + innerWidth + "x" + innerHeight + " " + tag
+          + " railL=" + getComputedStyle(rails[0]).display + " railR=" + getComputedStyle(rails[1]).display
+          + " src0=" + (f0.src ? "Y" : "N") + " ld0=" + (f0.__ld ? "Y" : "N") + " ld1=" + (f1.__ld ? "Y" : "N");
+      } catch (e) { }
+    }
+    f0.addEventListener("load", function () { f0.__ld = 1; d("frameLoaded"); });
+    f1.addEventListener("load", function () { f1.__ld = 1; d("frameLoaded"); });
+    window.__diag = d; d("boot");
+    setTimeout(function () { d("t5"); }, 5000);
+    setTimeout(function () { d("t15"); }, 15000);
+  })();
   // 2026-09-05 作者裁定: 轮换 10min→60min(展示质量优先; 单会话≈初始1次展示, 60min+ 长会话才二次计次)
   setInterval(refresh, 60 * 60 * 1000); // 60 分钟轮换
 })();
