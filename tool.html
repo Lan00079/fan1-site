@@ -875,7 +875,7 @@ async function testCfg() {
       endpoint: document.getElementById("endpoint").value.trim(), model: document.getElementById("model").value.trim(), apiKey: document.getElementById("apiKey").value.trim()
     }) });
     const v = await r.json();
-    if (v.ok) { st.style.color = "var(--ok)"; st.textContent = T("cfgTestOk") + " · " + (v.model || "") + (v.reply ? " · “" + v.reply + "”" : ""); }
+    if (v.ok) { st.style.color = "var(--ok)"; st.textContent = T("cfgTestOk") + " · " + (v.model || "") + (v.note ? " · " + v.note : "") + (v.reply ? " · “" + v.reply + "”" : ""); }
     else { st.style.color = "var(--err)"; st.textContent = T("cfgTestFail") + " " + (v.error || ""); }
   } catch (e) { st.style.color = "var(--err)"; st.textContent = T("cfgTestFail") + " " + (e.message || e); }
 }
