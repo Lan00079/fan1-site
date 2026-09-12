@@ -107,8 +107,10 @@
       <input type="text" id="model" style="width:150px" data-i18n="phModel" placeholder="模型名">
       <input type="password" id="apiKey" class="grow" placeholder="API Key">
       <button class="ghost" onclick="saveCfg()" data-i18n="btnSave">保存</button>
+      <button class="ghost" onclick="testCfg()" data-i18n="cfgTestBtn">检查</button>
       <button class="ghost" onclick="toggleNet(true)" data-i18n="btnNetToggle">网络与下载 ▼</button>
     </div>
+    <div class="meta" id="cfgTestStatus" style="display:none;margin-top:6px;font-size:12px"></div>
     <div class="row" style="margin-top:8px">
       <span class="meta" data-i18n="lblConc">并发数</span>
       <input type="number" id="trConc" min="1" max="16" style="width:64px" value="8">
@@ -277,6 +279,10 @@ const I18N = {
     phEndpoint: "API Endpoint（如 https://api.xx.com/v1）",
     phModel: "模型名",
     btnSave: "保存",
+    cfgTestBtn: "检查",
+    cfgTesting: "检查中…",
+    cfgTestOk: "✓ 连接正常",
+    cfgTestFail: "❌ 失败",
     btnNetToggle: "网络与下载 ▼",
     lblConc: "并发数",
     lblBatch: "每批条数",
@@ -465,6 +471,10 @@ const I18N = {
     phEndpoint: "API Endpoint (e.g. https://api.xx.com/v1)",
     phModel: "Model name",
     btnSave: "Save",
+    cfgTestBtn: "Test",
+    cfgTesting: "Testing…",
+    cfgTestOk: "✓ Connected",
+    cfgTestFail: "❌ Failed",
     btnNetToggle: "Network & Download ▼",
     lblConc: "Concurrency",
     lblBatch: "Batch Size",
@@ -851,6 +861,19 @@ function cacheLineHtml(g, j) {
   if (cs && cs.files) return `<div class="cache-line">${T("clCache")} ${cs.files} ${T("fileUnit")} · ${fmtMB(cs.bytes || 0)}</div>`;
   if (g.type === "download" || g.type === "wolf") return "";
   return `<div class="cache-line">${T("clNoPrefetch")}</div>`;
+}
+// 2026-09-12: 翻译接口「检查」— 用表单当前值实测一次最小补全(空 Key 回落已存配置, 服务端裁定)
+async function testCfg() {
+  const st = document.getElementById("cfgTestStatus");
+  st.style.display = "block"; st.style.color = "var(--dim)"; st.textContent = T("cfgTesting");
+  try {
+    const r = await fetch(API_BASE + "/api/cfg/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      endpoint: document.getElementById("endpoint").value.trim(), model: document.getElementById("model").value.trim(), apiKey: document.getElementById("apiKey").value.trim()
+    }) });
+    const v = await r.json();
+    if (v.ok) { st.style.color = "var(--ok)"; st.textContent = T("cfgTestOk") + " · " + (v.model || "") + (v.reply ? " · “" + v.reply + "”" : ""); }
+    else { st.style.color = "var(--err)"; st.textContent = T("cfgTestFail") + " " + (v.error || ""); }
+  } catch (e) { st.style.color = "var(--err)"; st.textContent = T("cfgTestFail") + " " + (e.message || e); }
 }
 async function saveCfg() {
   await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
