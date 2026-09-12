@@ -116,6 +116,8 @@
       <input type="number" id="trConc" min="1" max="16" style="width:64px" value="8">
       <span class="meta" data-i18n="lblBatch">每批条数</span>
       <input type="number" id="trBatch" min="1" max="800" style="width:64px" value="12">
+      <span class="meta" data-i18n="lblMaxTokens">输出上限</span>
+      <input type="number" id="maxTokens" min="256" max="128000" step="100" style="width:72px" value="8000">
       <span class="meta" data-i18n="lblStyle">翻译风格</span>
       <select id="trStyle" style="background:#0d1014;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 10px">
         <option value="faithful" data-i18n-opt="optFaithful">严苛忠实</option>
@@ -286,6 +288,7 @@ const I18N = {
     btnNetToggle: "网络与下载 ▼",
     lblConc: "并发数",
     lblBatch: "每批条数",
+    lblMaxTokens: "输出上限",
     lblStyle: "翻译风格",
     optFaithful: "严苛忠实",
     optBalanced: "均衡自然",
@@ -478,6 +481,7 @@ const I18N = {
     btnNetToggle: "Network & Download ▼",
     lblConc: "Concurrency",
     lblBatch: "Batch Size",
+    lblMaxTokens: "Output Limit",
     lblStyle: "Translation Style",
     optFaithful: "Strictly Faithful",
     optBalanced: "Balanced & Natural",
@@ -879,6 +883,7 @@ async function saveCfg() {
   await fetch(API_BASE + "/api/cfg", { method: "POST", body: JSON.stringify({
     endpoint: $("#endpoint").value.trim(), model: $("#model").value.trim(), apiKey: $("#apiKey").value.trim(),
     trConc: Number($("#trConc").value) || 8, trBatch: Number($("#trBatch").value) || 12,
+    maxTokens: Number($("#maxTokens").value) || 8000,
     style: $("#trStyle").value,
     autoReview: $("#autoReview").checked,
     uiLang: LANG,
@@ -1297,6 +1302,7 @@ async function refreshGames() {
   $("#endpoint").value = c.endpoint || ""; $("#model").value = c.model || "";
   if (c.trConc) $("#trConc").value = c.trConc;
   if (c.trBatch) $("#trBatch").value = c.trBatch;
+  if (c.maxTokens) $("#maxTokens").value = c.maxTokens;
   if (c.style) $("#trStyle").value = c.style;
   $("#autoReview").checked = !!c.autoReview;
   if (c.dlThreads) $("#dlThreads").value = c.dlThreads;
