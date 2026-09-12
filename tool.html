@@ -896,7 +896,10 @@ async function saveNet() {
   alert(T("alertNetSaved"));
 }
 async function openGame(id) {
-  const r = await fetch(`/api/open/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
+  // 2026-09-12: fetch 补 API_BASE(相对路径在真站页会 404, 「进入」对 wolf 类永远走不到原生启动分支)
+  // + 服务端返回"处理中"时弹窗提示, 不再落到 /play 空页(实测 35164 误Case)。
+  const r = await fetch(API_BASE + `/api/open/${id}`, { method: "POST" }).then(x => x.json()).catch(() => null);
+  if (r && r.ok === false && r.error) { alert(r.error); return; }
   if (!r || !r.ok) window.open(API_BASE + `/play/${id}/`, "_blank");
 }
 async function resume(id, wantTranslate) {
