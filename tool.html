@@ -1208,10 +1208,12 @@ async function refreshGames() {
   refreshingGames = true;
   let list = [], jobs = {};
   try {
-  list = await fetch(API_BASE + "/api/games").then(x => x.json()).catch(() => []) || [];
+  // 2026-09-12: 轮询 fetch 加 8s 超时 — 无超时 fetch 在代理/hung 连接下永久 pending, 轮询链断。
+  const fetchT = (u, ms = 8000) => Promise.race([fetch(u), new Promise((_, rej) => setTimeout(() => rej(new Error("poll timeout")), ms))]);
+  list = await fetchT(API_BASE + "/api/games").then(x => x.json()).catch(() => []) || [];
   // poll active jobs for inline progress
   await Promise.all(list.map(async g => {
-    try { jobs[g.id] = await fetch(`/api/job?id=${g.id}`).then(x => x.json()); } catch {}
+    try { jobs[g.id] = await fetchT(`/api/job?id=${g.id}`).then(x => x.json()); } catch {}
   }));
   // 提交中的新游戏(服务端尚未入库): 也拉取其任务进度, 在列表顶部渲染占位行
   await Promise.all([...pendingIds.keys()].filter(pid => !list.some(g => String(g.id) === pid)).map(async pid => {
