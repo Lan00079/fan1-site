@@ -6,6 +6,7 @@
       // nav
       navHome: "首页",
       navGames: "游戏库",
+      navTools: "工具箱",
       navDownload: "下载工具",
       navPrivacy: "隐私政策",
       langBtn: "EN",
@@ -126,6 +127,7 @@
     en: {
       navHome: "Home",
       navGames: "Games",
+      navTools: "Tools",
       navDownload: "Download",
       navPrivacy: "Privacy",
       langBtn: "中文",
