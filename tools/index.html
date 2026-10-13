@@ -3,7 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="preconnect" href="https://prizefamily.com">
+<link rel="preconnect" href="https://funny-tooth.com">
+<link rel="dns-prefetch" href="//prizefamily.com">
+<link rel="dns-prefetch" href="//funny-tooth.com">
 <title>小工具箱 · Tools</title>
+<script>
+/* 引擎透明覆盖层中和器(同首页 index.html)：popunder 引擎的透明层 z>=2147483000
+   会盖住横幅导致不可点，统一设 pointer-events:none 让点击落回广告 iframe；#vastFrame 内部不受影响 */
+(function () {
+  function neutralize() {
+    try {
+      document.querySelectorAll("div").forEach(function (el) {
+        if (el.closest("#vastFrame")) return;
+        var z = parseInt(el.style && el.style.zIndex || "0", 10);
+        if (z >= 2147483000 && el.style.pointerEvents !== "none") el.style.pointerEvents = "none";
+      });
+    } catch (err) {}
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    neutralize();
+    new MutationObserver(neutralize).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+  });
+})();
+</script>
 <style>
   :root { --bg:#0f1115; --card:#171a21; --line:#262b36; --tx:#e8eaf0; --sub:#9aa3b2; --ac:#4f9cf9; --ok:#3fbf6f; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -31,6 +55,8 @@
   details.hash code { display:block; margin-top:6px; color:var(--sub); font-size:11px; word-break:break-all; }
   footer { margin-top:48px; color:var(--sub); font-size:12px; line-height:1.9; border-top:1px solid var(--line); padding-top:18px; }
   .empty { color:var(--sub); text-align:center; padding:40px 0; }
+  .ad-row { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin:28px auto 4px; }
+  .ad-cell { width:300px; min-height:250px; }
 </style>
 </head>
 <body>
@@ -43,6 +69,52 @@
   <!-- ====== 工具列表: 加新工具 = 在 TOOLS 数组里加一个对象 ====== -->
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none">暂无工具</div>
+
+  <!-- HilltopAds banner 300x250 ×3 横排(同首页 zone：网站 bbXiV + 软件 X_V/byXmV) -->
+  <div class="ad-row">
+    <div class="ad-cell">
+      <script>
+(function(abp){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = abp || {};
+s.src = "\/\/prizefamily.com\/bbXiV\/sQd.G\/lA0OYgWicz\/ke\/m_9\/ubZsUylIkzPXTqcazrO\/DuYP1POZDAU\/tINRz-Mf4\/NFjnUN4\/OkQP";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+      </script>
+    </div>
+    <div class="ad-cell">
+      <script>
+(function(jnbi){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = jnbi || {};
+s.src = "\/\/prizefamily.com\/b\/X_V.sWdsG-lj0EYSWgcV\/Zezmk9\/uqZoUAlRkzPSTncrz\/OLDyYWzUMOjGkqtpNgzbMW4eN\/jMMMzRM\/w-";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+      </script>
+    </div>
+    <div class="ad-cell">
+      <script>
+(function(tfxd){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = tfxd || {};
+s.src = "\/\/prizefamily.com\/byXmV.sNdIG\/lV0tYiWwc-\/ve\/md9\/uBZbUAl-k\/PTT\/c\/zvOCDcYT0ONvTsctt-Nyz\/Mo4DN\/j\/Q\/2AMnQt";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+      </script>
+    </div>
+  </div>
 
   <footer>
     所有工具按"AS IS"提供，仅供学习研究，使用产生的一切后果由使用者自行承担。<br>
@@ -90,6 +162,46 @@ for (const t of TOOLS) {
     <details class="hash"><summary>SHA256 校验值</summary><code>${t.sha256}</code></details>`;
   grid.appendChild(el);
 }
+</script>
+
+<!-- HilltopAds Popunder + In-Page Push(同首页, 官方要求置于 </body> 前) -->
+<script>
+(function(abp){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = abp || {};
+s.src = "\/\/funny-tooth.com\/cxD.9z6hbw2G5XlbScWoQN9ENSz\/Mm4wN\/jbU-1aMUyd0\/3kMVz\/g\/2bNsTKUj3v";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+<script>
+(function(abp){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = abp || {};
+s.src = "\/\/prizefamily.com\/bHXBVcsmd.GFl\/0FY\/WlcG\/Ce\/mW9cuIZyUql_kMPPTmcSzDOXD\/YF1LNjjEkltnNNzuMn4FN\/jkUp3BMYwY";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
+<!-- HilltopAds VAST 3.0 左侧停靠播放器(同首页 vast-frame.html 隔离版)：有填充才现身, 空壳隐藏, 窄屏隐藏 -->
+<iframe id="vastFrame" src="../vast-frame.html" title="ad" allow="autoplay; encrypted-media"
+        style="display:none;position:fixed;left:12px;top:50%;transform:translateY(-50%);width:344px;height:300px;border:0;z-index:2147483648"></iframe>
+<style>@media (max-width: 1250px) { #vastFrame { display: none !important; } }</style>
+<script>
+window.addEventListener("message", function (e) {
+  if (!e.data || e.data.source !== "fan1-vast") return;
+  var f = document.getElementById("vastFrame");
+  if (!f) return;
+  if (e.data.event === "filled") f.style.display = "block";
+  if (e.data.event === "empty") f.style.display = "none";
+});
 </script>
 </body>
 </html>
