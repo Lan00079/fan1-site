@@ -55,22 +55,22 @@
   details.hash code { display:block; margin-top:6px; color:var(--sub); font-size:11px; word-break:break-all; }
   footer { margin-top:48px; color:var(--sub); font-size:12px; line-height:1.9; border-top:1px solid var(--line); padding-top:18px; }
   .empty { color:var(--sub); text-align:center; padding:40px 0; }
-  .ad-row { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin:28px auto 4px; }
+  .home { display:inline-block; color:var(--ac); text-decoration:none; font-size:13px; border:1px solid var(--line); padding:5px 14px; border-radius:6px; margin-bottom:16px; }
+  .home:hover { border-color:var(--ac); }
+  .ad-row { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin:0 auto 4px; }
   .ad-cell { width:300px; min-height:250px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <a class="home" href="../">← 返回主页</a>
     <h1>🔧 小工具箱</h1>
     <p>自用小工具发布页 · 全部免费 · 下载后请校验 SHA256</p>
   </header>
 
-  <!-- ====== 工具列表: 加新工具 = 在 TOOLS 数组里加一个对象 ====== -->
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" style="display:none">暂无工具</div>
-
-  <!-- HilltopAds banner 300x250 ×3 横排(同首页 zone：网站 bbXiV + 软件 X_V/byXmV) -->
+  <!-- HilltopAds banner 300x250 ×3 横排(同首页 zone：网站 bbXiV + 软件 X_V/byXmV)。
+       放 header 与工具卡之间: 首屏即可见 —— 填充本身随拍卖波动, 放折叠线下更难被看到 -->
   <div class="ad-row">
     <div class="ad-cell">
       <script>
@@ -115,6 +115,10 @@ l.parentNode.insertBefore(s, l);
       </script>
     </div>
   </div>
+
+  <!-- ====== 工具列表: 加新工具 = 在 TOOLS 数组里加一个对象 ====== -->
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">暂无工具</div>
 
   <footer>
     所有工具按"AS IS"提供，仅供学习研究，使用产生的一切后果由使用者自行承担。<br>
